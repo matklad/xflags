@@ -188,21 +188,26 @@ impl RustAnalyzer {
 
 OPTIONS:
     -v, --verbose
+
+SUBCOMANDS:
+
 rust-analyzer server
 
-OPTIONS:
+  OPTIONS:
     --dir <path>
-rust-analyzer server launch
 
-OPTIONS:
     --log
+
+
 rust-analyzer server watch
+
+
 rust-analyzer analysis-stats
 
-ARGS:
+  ARGS:
     <path>
 
-OPTIONS:
+  OPTIONS:
     --parallel
 ";
 }

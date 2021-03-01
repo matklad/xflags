@@ -151,7 +151,10 @@ fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
     p.enter_delim(Delimiter::Bracket)?;
     p.expect_keyword("doc")?;
     p.expect_punct('=')?;
-    let res = p.expect_string()?;
+    let mut res = p.expect_string()?;
+    if let Some(suf) = res.strip_prefix(' ') {
+        res = suf.to_string();
+    }
     p.exit_delim()?;
     Ok(Some(res))
 }

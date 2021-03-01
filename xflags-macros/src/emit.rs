@@ -328,13 +328,15 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     if let Some(doc) = &cmd.doc {
         w!(buf, "  {}\n", doc)
     }
+    let indent = if prefix.is_empty() { "" } else { "  " };
 
-    if !cmd.args.is_empty() {
+    let args = cmd.args_with_default();
+    if !args.is_empty() {
         blank_line(buf);
-        w!(buf, "ARGS:\n");
+        w!(buf, "{}ARGS:\n", indent);
 
         let mut blank = "";
-        for arg in &cmd.args {
+        for arg in &args {
             w!(buf, "{}", blank);
             blank = "\n";
 
@@ -350,12 +352,13 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
         }
     }
 
-    if !cmd.flags.is_empty() {
+    let flags = cmd.flags_with_default();
+    if !flags.is_empty() {
         blank_line(buf);
-        w!(buf, "OPTIONS:\n");
+        w!(buf, "{}OPTIONS:\n", indent);
 
         let mut blank = "";
-        for flag in &cmd.flags {
+        for flag in &flags {
             w!(buf, "{}", blank);
             blank = "\n";
 
@@ -368,8 +371,15 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
         }
     }
 
+    if prefix.is_empty() {
+        blank_line(buf);
+        w!(buf, "SUBCOMANDS:");
+    }
+
     let prefix = format!("{}{} ", prefix, cmd.name);
-    for sub in &cmd.subcommands {
+    for sub in cmd.named_subcommands() {
+        blank_line(buf);
+        blank_line(buf);
         help_rec(buf, &prefix, sub);
     }
 }
@@ -394,6 +404,20 @@ impl ast::Cmd {
         } else {
             None
         }
+    }
+    fn args_with_default(&self) -> Vec<&ast::Arg> {
+        let mut res = self.args.iter().collect::<Vec<_>>();
+        if let Some(sub) = self.default_subcommand() {
+            res.extend(sub.args_with_default());
+        }
+        res
+    }
+    fn flags_with_default(&self) -> Vec<&ast::Flag> {
+        let mut res = self.flags.iter().collect::<Vec<_>>();
+        if let Some(sub) = self.default_subcommand() {
+            res.extend(sub.flags_with_default())
+        }
+        res
     }
 }
 

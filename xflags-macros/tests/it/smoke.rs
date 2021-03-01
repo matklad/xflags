@@ -77,17 +77,17 @@ impl RustAnalyzer {
 }
 impl RustAnalyzer {
     const _HELP: &'static str = "rust-analyzer
-   LSP server for rust.
+  LSP server for rust.
 
 ARGS:
     <workspace>
 
     [jobs]
-       Number of concurrent jobs.
+      Number of concurrent jobs.
 
 OPTIONS:
     --log-file <path>
-       Path to log file. By default, logs go to stderr.
+      Path to log file. By default, logs go to stderr.
 
     -v, --verbose
 
@@ -96,5 +96,6 @@ OPTIONS:
     --data <value>
 
     --emoji
-";
+
+SUBCOMANDS:";
 }
