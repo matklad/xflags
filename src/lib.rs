@@ -15,6 +15,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 /// Private impl details for macros.
 #[doc(hidden)]
 pub mod rt;
