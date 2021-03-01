@@ -1,0 +1,17 @@
+[package]
+name = "xflags"
+version = "0.1.0"
+description = "Moderately simple command line arguments parser."
+categories = ["command-line-interface"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/matklad/xflags"
+authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
+edition = "2018"
+
+exclude = [".github/", "bors.toml", "rustfmt.toml"]
+
+[workspace]
+members = ["xtask", "xflags-macros"]
+
+[dependencies]
+xflags-macros = { path = "./xflags-macros", version = "=0.1.0"}
