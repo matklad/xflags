@@ -19,10 +19,16 @@ pub(crate) fn parse(ts: TokenStream) -> Result<ast::Cmd> {
     root(&mut p)
 }
 
+macro_rules! format_err {
+    ($($tt:tt)*) => {
+        Error { msg: format!($($tt)*) }
+        // panic!($($tt)*)
+    };
+}
+
 macro_rules! bail {
     ($($tt:tt)*) => {
-        return Err(Error { msg: format!($($tt)*) })
-        // panic!($($tt)*)
+        return Err(format_err!($($tt)*))
     };
 }
 
@@ -131,7 +137,10 @@ fn arity(p: &mut Parser) -> Result<ast::Arity> {
     if p.eat_keyword("repeated") {
         return Ok(ast::Arity::Repeated);
     }
-    bail!("expected one of `optional`, `required`, `repeated`")
+    if let Some(name) = p.eat_name() {
+        bail!("expected one of `optional`, `required`, `repeated`, got `{}`", name)
+    }
+    bail!("expected one of `optional`, `required`, `repeated`, got {:?}", p.ts.pop())
 }
 
 fn ty(p: &mut Parser) -> Result<ast::Ty> {
@@ -238,6 +247,12 @@ impl Parser {
     }
 
     fn expect_name(&mut self) -> Result<String> {
+        self.eat_name().ok_or_else(|| {
+            let next = self.ts.pop().map(|it| it.to_string()).unwrap_or_default();
+            format_err!("expected a name, got: `{}`", next)
+        })
+    }
+    fn eat_name(&mut self) -> Option<String> {
         let mut buf = String::new();
         let mut prev_ident = false;
         loop {
@@ -255,10 +270,10 @@ impl Parser {
             self.ts.pop();
         }
         if buf.is_empty() {
-            let next = self.ts.pop().map(|it| it.to_string()).unwrap_or_default();
-            bail!("expected a name, got: `{}`", next)
+            None
+        } else {
+            Some(buf)
         }
-        Ok(buf)
     }
 
     fn _expect_ident(&mut self) -> Result<String> {
