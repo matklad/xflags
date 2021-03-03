@@ -1,4 +1,4 @@
-= xflags
+# xflags
 
 Moderately simple command line arguments parsing:
 
