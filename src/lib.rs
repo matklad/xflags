@@ -17,6 +17,12 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+impl Error {
+    pub fn new(message: impl Into<String>) -> Error {
+        Error { msg: message.into() }
+    }
+}
+
 /// Private impl details for macros.
 #[doc(hidden)]
 pub mod rt;
