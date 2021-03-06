@@ -1,4 +1,9 @@
 #[derive(Debug)]
+pub(crate) struct XFlags {
+    pub(crate) cmd: Cmd,
+}
+
+#[derive(Debug)]
 pub(crate) struct Cmd {
     pub(crate) name: String,
     pub(crate) doc: Option<String>,

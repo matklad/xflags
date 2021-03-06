@@ -14,9 +14,9 @@ pub(crate) struct Error {
     msg: String,
 }
 
-pub(crate) fn parse(ts: TokenStream) -> Result<ast::Cmd> {
+pub(crate) fn parse(ts: TokenStream) -> Result<ast::XFlags> {
     let mut p = Parser::new(ts);
-    root(&mut p)
+    xflags(&mut p)
 }
 
 macro_rules! format_err {
@@ -32,11 +32,12 @@ macro_rules! bail {
     };
 }
 
-fn root(p: &mut Parser) -> Result<ast::Cmd> {
+fn xflags(p: &mut Parser) -> Result<ast::XFlags> {
     let doc = opt_doc(p)?;
     let mut cmd = cmd(p)?;
     cmd.doc = doc;
-    Ok(cmd)
+    let res = ast::XFlags { cmd };
+    Ok(res)
 }
 
 fn cmd(p: &mut Parser) -> Result<ast::Cmd> {

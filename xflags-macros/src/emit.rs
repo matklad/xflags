@@ -2,21 +2,21 @@ use crate::ast;
 
 use std::fmt::Write;
 
-pub(crate) fn emit(root: &ast::Cmd) -> String {
-    _emit(root, false)
+pub(crate) fn emit(xflags: &ast::XFlags) -> String {
+    emit_xflags(xflags, false)
 }
 
 #[cfg(not(test))]
-pub(crate) fn emit_parser(root: &ast::Cmd) -> String {
-    _emit(root, true)
+pub(crate) fn emit_parser(xflags: &ast::XFlags) -> String {
+    emit_xflags(xflags, true)
 }
 
-fn _emit(root: &ast::Cmd, only_parser: bool) -> String {
+fn emit_xflags(xflags: &ast::XFlags, only_parser: bool) -> String {
     let mut buf = String::new();
 
-    emit_structs(&mut buf, root);
+    emit_cmd(&mut buf, &xflags.cmd);
     blank_line(&mut buf);
-    emit_api(&mut buf, root);
+    emit_api(&mut buf, xflags);
 
     if std::env::var("XFLAGS_DUMP").is_ok() {
         println!("\n// generated start");
@@ -31,8 +31,8 @@ fn _emit(root: &ast::Cmd, only_parser: bool) -> String {
     }
 
     blank_line(&mut buf);
-    emit_impls(&mut buf, root);
-    emit_help(&mut buf, root);
+    emit_impls(&mut buf, &xflags.cmd);
+    emit_help(&mut buf, xflags);
 
     buf
 }
@@ -41,10 +41,6 @@ macro_rules! w {
     ($($tt:tt)*) => {
         drop(write!($($tt)*))
     };
-}
-
-fn emit_structs(buf: &mut String, root: &ast::Cmd) {
-    emit_cmd(buf, root)
 }
 
 fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
@@ -110,8 +106,8 @@ fn gen_arg_ty(arity: ast::Arity, ty: &ast::Ty) -> String {
     }
 }
 
-fn emit_api(buf: &mut String, root: &ast::Cmd) -> () {
-    w!(buf, "impl {} {{\n", camel(&root.name));
+fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
+    w!(buf, "impl {} {{\n", camel(&xflags.cmd.name));
 
     w!(buf, "    pub const HELP: &'static str = Self::_HELP;\n");
     blank_line(buf);
@@ -309,18 +305,19 @@ fn emit_impl(buf: &mut String, cmd: &ast::Cmd) -> () {
     w!(buf, "}}\n");
 }
 
-fn emit_help(buf: &mut String, root: &ast::Cmd) -> () {
-    w!(buf, "impl {} {{\n", root.ident());
-    let help = format!("{:?}", help(root));
+fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
+    w!(buf, "impl {} {{\n", xflags.cmd.ident());
+
+    let help = {
+        let mut buf = String::new();
+        help_rec(&mut buf, "", &xflags.cmd);
+        buf
+    };
+    let help = format!("{:?}", help);
     let help = help.replace("\\n", "\n");
+
     w!(buf, "const _HELP: &'static str = {};", help);
     w!(buf, "}}\n");
-}
-
-fn help(cmd: &ast::Cmd) -> String {
-    let mut buf = String::new();
-    help_rec(&mut buf, "", cmd);
-    buf
 }
 
 fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
