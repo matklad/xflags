@@ -33,10 +33,11 @@ macro_rules! bail {
 }
 
 fn xflags(p: &mut Parser) -> Result<ast::XFlags> {
+    let src = if p.eat_keyword("src") { Some(p.expect_string()?) } else { None };
     let doc = opt_doc(p)?;
     let mut cmd = cmd(p)?;
     cmd.doc = doc;
-    let res = ast::XFlags { cmd };
+    let res = ast::XFlags { src, cmd };
     Ok(res)
 }
 

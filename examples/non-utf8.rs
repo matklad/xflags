@@ -3,7 +3,7 @@ use std::{ffi::OsString, os::unix::ffi::OsStringExt};
 mod flags {
     use std::{ffi::OsString, path::PathBuf};
 
-    xflags::args! {
+    xflags::xflags! {
         cmd Cmd
             required a: OsString
             required b: PathBuf

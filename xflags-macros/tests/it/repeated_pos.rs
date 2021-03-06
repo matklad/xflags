@@ -10,21 +10,30 @@ pub struct RepeatedPos {
 }
 
 impl RepeatedPos {
-    pub const HELP: &'static str = Self::_HELP;
+    pub const HELP: &'static str = Self::HELP_;
 
     pub fn from_env() -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new_from_env();
-        Self::_parse(&mut p)
+        Self::from_env_()
     }
 
     pub fn from_vec(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new(args);
-        Self::_parse(&mut p)
+        Self::from_vec_(args)
     }
 }
 
 impl RepeatedPos {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn from_env_() -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new_from_env();
+        Self::parse_(&mut p)
+    }
+    fn from_vec_(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new(args);
+        Self::parse_(&mut p)
+    }
+}
+
+impl RepeatedPos {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut a = (false, Vec::new());
         let mut b = (false, Vec::new());
         let mut c = (false, Vec::new());
@@ -68,7 +77,7 @@ impl RepeatedPos {
     }
 }
 impl RepeatedPos {
-    const _HELP: &'static str = "RepeatedPos
+    const HELP_: &'static str = "RepeatedPos
 
 ARGS:
     <a>

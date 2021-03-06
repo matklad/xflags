@@ -1,5 +1,5 @@
 mod flags {
-    xflags::args! {
+    xflags::xflags! {
         cmd hello
             required name: String
         {

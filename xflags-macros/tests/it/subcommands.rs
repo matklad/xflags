@@ -41,21 +41,30 @@ pub struct AnalysisStats {
 }
 
 impl RustAnalyzer {
-    pub const HELP: &'static str = Self::_HELP;
+    pub const HELP: &'static str = Self::HELP_;
 
     pub fn from_env() -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new_from_env();
-        Self::_parse(&mut p)
+        Self::from_env_()
     }
 
     pub fn from_vec(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new(args);
-        Self::_parse(&mut p)
+        Self::from_vec_(args)
     }
 }
 
 impl RustAnalyzer {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn from_env_() -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new_from_env();
+        Self::parse_(&mut p)
+    }
+    fn from_vec_(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new(args);
+        Self::parse_(&mut p)
+    }
+}
+
+impl RustAnalyzer {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut verbose = Vec::new();
 
         let mut sub_ = None;
@@ -68,11 +77,11 @@ impl RustAnalyzer {
                 Err(arg_) => {
                     match arg_.to_str().unwrap_or("") {
                         "server" => {
-                            sub_ = Some(RustAnalyzerCmd::Server(Server::_parse(p_)?));
+                            sub_ = Some(RustAnalyzerCmd::Server(Server::parse_(p_)?));
                             break;
                         }
                         "analysis-stats" => {
-                            sub_ = Some(RustAnalyzerCmd::AnalysisStats(AnalysisStats::_parse(p_)?));
+                            sub_ = Some(RustAnalyzerCmd::AnalysisStats(AnalysisStats::parse_(p_)?));
                             break;
                         }
                         _ => (),
@@ -86,7 +95,7 @@ impl RustAnalyzer {
 }
 
 impl Server {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut dir = Vec::new();
 
         let mut sub_ = None;
@@ -102,7 +111,7 @@ impl Server {
                 Err(arg_) => {
                     match arg_.to_str().unwrap_or("") {
                         "watch" => {
-                            sub_ = Some(ServerCmd::Watch(Watch::_parse(p_)?));
+                            sub_ = Some(ServerCmd::Watch(Watch::parse_(p_)?));
                             break;
                         }
                         _ => (),
@@ -113,14 +122,14 @@ impl Server {
             }
         }
         if sub_.is_none() {
-            sub_ = Some(ServerCmd::Launch(Launch::_parse(p_)?));
+            sub_ = Some(ServerCmd::Launch(Launch::parse_(p_)?));
         }
         Ok(Self { dir: p_.optional("--dir", dir)?, subcommand: p_.subcommand(sub_)? })
     }
 }
 
 impl Launch {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut log = Vec::new();
 
         while let Some(arg_) = p_.pop_flag() {
@@ -139,7 +148,7 @@ impl Launch {
 }
 
 impl Watch {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match flag_.as_str() {
@@ -155,7 +164,7 @@ impl Watch {
 }
 
 impl AnalysisStats {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut parallel = Vec::new();
 
         let mut path = (false, Vec::new());
@@ -184,7 +193,7 @@ impl AnalysisStats {
     }
 }
 impl RustAnalyzer {
-    const _HELP: &'static str = "rust-analyzer
+    const HELP_: &'static str = "rust-analyzer
 
 OPTIONS:
     -v, --verbose

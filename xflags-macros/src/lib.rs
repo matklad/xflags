@@ -1,20 +1,13 @@
 mod ast;
 mod parse;
 mod emit;
+mod update;
 
 #[cfg(not(test))]
 #[proc_macro]
-pub fn args(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn xflags(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let cmd = parse::parse(ts).unwrap();
     let text = emit::emit(&cmd);
-    text.parse().unwrap()
-}
-
-#[cfg(not(test))]
-#[proc_macro]
-pub fn args_parser(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let cmd = parse::parse(ts).unwrap();
-    let text = emit::emit_parser(&cmd);
     text.parse().unwrap()
 }
 

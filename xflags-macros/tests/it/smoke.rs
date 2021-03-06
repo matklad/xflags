@@ -14,21 +14,30 @@ pub struct RustAnalyzer {
 }
 
 impl RustAnalyzer {
-    pub const HELP: &'static str = Self::_HELP;
+    pub const HELP: &'static str = Self::HELP_;
 
     pub fn from_env() -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new_from_env();
-        Self::_parse(&mut p)
+        Self::from_env_()
     }
 
     pub fn from_vec(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
-        let mut p = xflags::rt::Parser::new(args);
-        Self::_parse(&mut p)
+        Self::from_vec_(args)
     }
 }
 
 impl RustAnalyzer {
-    fn _parse(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+    fn from_env_() -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new_from_env();
+        Self::parse_(&mut p)
+    }
+    fn from_vec_(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
+        let mut p = xflags::rt::Parser::new(args);
+        Self::parse_(&mut p)
+    }
+}
+
+impl RustAnalyzer {
+    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
         let mut log_file = Vec::new();
         let mut verbose = Vec::new();
         let mut number = Vec::new();
@@ -76,7 +85,7 @@ impl RustAnalyzer {
     }
 }
 impl RustAnalyzer {
-    const _HELP: &'static str = "rust-analyzer
+    const HELP_: &'static str = "rust-analyzer
   LSP server for rust.
 
 ARGS:
