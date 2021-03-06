@@ -39,7 +39,7 @@ mod flags {
             Self::from_vec_(args)
         }
     }
-// generated end
+    // generated end
 }
 
 fn main() {
