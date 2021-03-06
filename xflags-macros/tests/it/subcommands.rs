@@ -31,7 +31,7 @@ pub struct Launch {
 }
 
 #[derive(Debug)]
-pub struct Watch {}
+pub struct Watch;
 
 #[derive(Debug)]
 pub struct AnalysisStats {

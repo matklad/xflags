@@ -36,7 +36,13 @@ macro_rules! w {
 
 fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
     w!(buf, "#[derive(Debug)]\n");
-    w!(buf, "pub struct {} {{\n", cmd.ident());
+    w!(buf, "pub struct {}", cmd.ident());
+    if cmd.args.is_empty() && cmd.flags.is_empty() && cmd.subcommands.is_empty() {
+        w!(buf, ";\n");
+        return;
+    }
+    w!(buf, " {{\n");
+
     for arg in &cmd.args {
         let ty = gen_arg_ty(arg.arity, &arg.val.ty);
         w!(buf, "    pub {}: {},\n", arg.val.ident(), ty);
