@@ -1,3 +1,7 @@
+mod ast;
+mod parse;
+mod emit;
+
 #[cfg(not(test))]
 #[proc_macro]
 pub fn args(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -13,10 +17,6 @@ pub fn args_parser(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let text = emit::emit_parser(&cmd);
     text.parse().unwrap()
 }
-
-mod ast;
-mod emit;
-mod parse;
 
 #[cfg(test)]
 pub fn compile(src: &str) -> String {
