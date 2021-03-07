@@ -156,6 +156,26 @@ fn ty(p: &mut Parser) -> Result<ast::Ty> {
 }
 
 fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
+    let mut res = match opt_doc_line(p)? {
+        Some(doc) => doc,
+        None => return Ok(None),
+    };
+
+    loop {
+        let doc_line = opt_doc_line(p)?;
+        match doc_line {
+            Some(line) => {
+                res.push_str("\n");
+                res.push_str(&line);
+            },
+            None => break,
+        }
+    }
+
+    Ok(Some(res))
+}
+
+fn opt_doc_line(p: &mut Parser) -> Result<Option<String>> {
     if !p.eat_punct('#') {
         return Ok(None);
     }
