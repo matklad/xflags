@@ -381,7 +381,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     if !subcommands.is_empty() {
         if prefix.is_empty() {
             blank_line(buf);
-            w!(buf, "SUBCOMANDS:");
+            w!(buf, "SUBCOMMANDS:");
         }
 
         let prefix = format!("{}{} ", prefix, cmd.name);
