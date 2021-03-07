@@ -198,7 +198,7 @@ impl RustAnalyzer {
 OPTIONS:
     -v, --verbose
 
-SUBCOMANDS:
+SUBCOMMANDS:
 
 rust-analyzer server
 

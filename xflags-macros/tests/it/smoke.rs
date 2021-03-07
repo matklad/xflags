@@ -105,6 +105,5 @@ OPTIONS:
     --data <value>
 
     --emoji
-
-SUBCOMANDS:";
+";
 }

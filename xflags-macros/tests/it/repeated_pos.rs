@@ -87,6 +87,5 @@ ARGS:
     [c]
 
     <rest>...
-
-SUBCOMANDS:";
+";
 }

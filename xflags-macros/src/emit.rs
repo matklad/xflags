@@ -487,10 +487,20 @@ mod tests {
         }
     }
 
+    fn update_on_disk_if_different(file: &Path, new_contents: String) -> bool {
+        let old_contents = fs::read_to_string(file).unwrap_or_default();
+        if old_contents.trim() == new_contents.trim() {
+            return false;
+        }
+        fs::write(file, new_contents).unwrap();
+        true
+    }
+
     #[test]
     fn gen_it() {
         let test_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/it");
 
+        let mut did_update = false;
         for entry in fs::read_dir(test_dir.join("src")).unwrap() {
             let entry = entry.unwrap();
 
@@ -509,11 +519,14 @@ mod tests {
             );
 
             let name = entry.file_name();
-            fs::write(test_dir.join(name), code).unwrap();
+            did_update |= update_on_disk_if_different(&test_dir.join(name), code);
 
             if fmt.is_none() {
                 panic!("syntax error");
             }
+        }
+        if did_update {
+            panic!("generated output changed")
         }
     }
 }
