@@ -323,7 +323,7 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
         buf
     };
     let help = format!("{:?}", help);
-    let help = help.replace("\\n", "\n");
+    let help = help.replace("\\n", "\n").replacen("\"", "\"\\\n", 1);
 
     w!(buf, "const HELP_: &'static str = {};", help);
     w!(buf, "}}\n");

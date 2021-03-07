@@ -95,7 +95,8 @@ impl Sub {
     }
 }
 impl Helpful {
-    const HELP_: &'static str = "helpful
+    const HELP_: &'static str = "\
+helpful
   Does stuff
 
 ARGS:
