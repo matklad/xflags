@@ -77,7 +77,8 @@ impl RepeatedPos {
     }
 }
 impl RepeatedPos {
-    const HELP_: &'static str = "RepeatedPos
+    const HELP_: &'static str = "\
+RepeatedPos
 
 ARGS:
     <a>
@@ -87,6 +88,5 @@ ARGS:
     [c]
 
     <rest>...
-
-SUBCOMANDS:";
+";
 }

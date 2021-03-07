@@ -193,12 +193,13 @@ impl AnalysisStats {
     }
 }
 impl RustAnalyzer {
-    const HELP_: &'static str = "rust-analyzer
+    const HELP_: &'static str = "\
+rust-analyzer
 
 OPTIONS:
     -v, --verbose
 
-SUBCOMANDS:
+SUBCOMMANDS:
 
 rust-analyzer server
 

@@ -1,4 +1,4 @@
-args! {
+xflags! {
     cmd RepeatedPos
         required a: PathBuf
         optional b: u32

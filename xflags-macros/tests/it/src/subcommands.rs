@@ -1,4 +1,4 @@
-args! {
+xflags! {
     cmd rust-analyzer {
         repeated -v, --verbose
 

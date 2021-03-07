@@ -85,7 +85,8 @@ impl RustAnalyzer {
     }
 }
 impl RustAnalyzer {
-    const HELP_: &'static str = "rust-analyzer
+    const HELP_: &'static str = "\
+rust-analyzer
   LSP server for rust.
 
 ARGS:
@@ -105,6 +106,5 @@ OPTIONS:
     --data <value>
 
     --emoji
-
-SUBCOMANDS:";
+";
 }
