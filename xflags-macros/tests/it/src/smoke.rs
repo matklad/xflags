@@ -1,4 +1,4 @@
-args! {
+xflags! {
     /// LSP server for rust.
     cmd rust-analyzer
         required workspace: PathBuf
