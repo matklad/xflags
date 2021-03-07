@@ -377,16 +377,19 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
         }
     }
 
-    if prefix.is_empty() {
-        blank_line(buf);
-        w!(buf, "SUBCOMANDS:");
-    }
+    let subcommands = cmd.named_subcommands();
+    if !subcommands.is_empty() {
+        if prefix.is_empty() {
+            blank_line(buf);
+            w!(buf, "SUBCOMANDS:");
+        }
 
-    let prefix = format!("{}{} ", prefix, cmd.name);
-    for sub in cmd.named_subcommands() {
-        blank_line(buf);
-        blank_line(buf);
-        help_rec(buf, &prefix, sub);
+        let prefix = format!("{}{} ", prefix, cmd.name);
+        for sub in subcommands {
+            blank_line(buf);
+            blank_line(buf);
+            help_rec(buf, &prefix, sub);
+        }
     }
 }
 
