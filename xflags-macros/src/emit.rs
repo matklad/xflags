@@ -109,11 +109,13 @@ fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "    pub const HELP: &'static str = Self::HELP_;\n");
     blank_line(buf);
 
+    w!(buf, "    #[allow(dead_code)]\n");
     w!(buf, "    pub fn from_env() -> xflags::Result<Self> {{\n");
     w!(buf, "        Self::from_env_()\n");
     w!(buf, "    }}\n");
     blank_line(buf);
 
+    w!(buf, "    #[allow(dead_code)]\n");
     w!(buf, "    pub fn from_vec(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {{\n");
     w!(buf, "        Self::from_vec_(args)\n");
     w!(buf, "    }}\n");
