@@ -334,7 +334,9 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
 fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     w!(buf, "{}{}\n", prefix, cmd.name);
     if let Some(doc) = &cmd.doc {
-        w!(buf, "  {}\n", doc)
+        for doc_line in doc.lines() {
+            w!(buf, "  {}\n", doc_line)
+        }
     }
     let indent = if prefix.is_empty() { "" } else { "  " };
 
@@ -355,7 +357,9 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             };
             w!(buf, "    {}{}{}\n", l, arg.val.name, r);
             if let Some(doc) = &arg.doc {
-                w!(buf, "      {}\n", doc)
+                for doc_line in doc.lines() {
+                    w!(buf, "      {}\n", doc_line)
+                }
             }
         }
     }
@@ -374,7 +378,9 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
             w!(buf, "    {}--{}{}\n", short, flag.name, value);
             if let Some(doc) = &flag.doc {
-                w!(buf, "      {}\n", doc)
+                for doc_line in doc.lines() {
+                    w!(buf, "      {}\n", doc_line)
+                }
             }
         }
     }
