@@ -1,6 +1,7 @@
 mod repeated_pos;
 mod smoke;
 mod subcommands;
+mod help;
 
 use std::{ffi::OsString, fmt};
 

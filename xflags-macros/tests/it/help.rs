@@ -3,7 +3,7 @@ use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
 pub struct Helpful {
-    pub src: Option<PathBut>,
+    pub src: Option<PathBuf>,
 
     pub switch: (),
     pub subcommand: HelpfulCmd,
@@ -64,7 +64,7 @@ impl Helpful {
                         _ => (),
                     }
                     if let (done_ @ false, buf_) = &mut src {
-                        buf_.push(p_.value_from_str::<PathBut>("src", arg_)?);
+                        buf_.push(arg_.into());
                         *done_ = true;
                         continue;
                     }
