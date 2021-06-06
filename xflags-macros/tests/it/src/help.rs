@@ -7,7 +7,7 @@ xflags! {
         optional src: PathBuf
         /// Another arg.
         ///
-        /// This time, there's some extra info about the
+        /// This time, we provide some extra info about the
         /// arg. Maybe some caveats, or what kinds of
         /// values are accepted.
         optional extra: String
