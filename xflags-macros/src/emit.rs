@@ -331,10 +331,20 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "}}\n");
 }
 
+fn write_lines_indented(buf: &mut String, multiline_str: &str, indent: usize) {
+    for line in multiline_str.split('\n').map(str::trim_end) {
+        if line.is_empty() {
+            w!(buf, "\n")
+        } else {
+            w!(buf, "{blank:indent$}{}\n", line, indent = indent, blank = "");
+        }
+    }
+}
+
 fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     w!(buf, "{}{}\n", prefix, cmd.name);
     if let Some(doc) = &cmd.doc {
-        w!(buf, "  {}\n", doc)
+        write_lines_indented(buf, doc, 2);
     }
     let indent = if prefix.is_empty() { "" } else { "  " };
 
@@ -355,7 +365,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             };
             w!(buf, "    {}{}{}\n", l, arg.val.name, r);
             if let Some(doc) = &arg.doc {
-                w!(buf, "      {}\n", doc)
+                write_lines_indented(buf, doc, 6)
             }
         }
     }
@@ -374,7 +384,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
             w!(buf, "    {}--{}{}\n", short, flag.name, value);
             if let Some(doc) = &flag.doc {
-                w!(buf, "      {}\n", doc)
+                write_lines_indented(buf, doc, 6);
             }
         }
     }

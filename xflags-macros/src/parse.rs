@@ -155,7 +155,7 @@ fn ty(p: &mut Parser) -> Result<ast::Ty> {
     Ok(res)
 }
 
-fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
+fn opt_single_doc(p: &mut Parser) -> Result<Option<String>> {
     if !p.eat_punct('#') {
         return Ok(None);
     }
@@ -168,6 +168,18 @@ fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
     }
     p.exit_delim()?;
     Ok(Some(res))
+}
+
+fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
+    let lines =
+        core::iter::from_fn(|| opt_single_doc(p).transpose()).collect::<Result<Vec<String>>>()?;
+    let lines = lines.join("\n");
+
+    if lines.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(lines))
+    }
 }
 
 fn cmd_name(p: &mut Parser) -> Result<String> {

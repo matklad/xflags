@@ -4,6 +4,7 @@ use std::{ffi::OsString, path::PathBuf};
 #[derive(Debug)]
 pub struct Helpful {
     pub src: Option<PathBuf>,
+    pub extra: Option<String>,
 
     pub switch: (),
     pub subcommand: HelpfulCmd,
@@ -15,7 +16,9 @@ pub enum HelpfulCmd {
 }
 
 #[derive(Debug)]
-pub struct Sub;
+pub struct Sub {
+    pub flag: bool,
+}
 
 impl Helpful {
     pub const HELP: &'static str = Self::HELP_;
@@ -47,6 +50,7 @@ impl Helpful {
         let mut switch = Vec::new();
 
         let mut src = (false, Vec::new());
+        let mut extra = (false, Vec::new());
 
         let mut sub_ = None;
         while let Some(arg_) = p_.pop_flag() {
@@ -68,12 +72,18 @@ impl Helpful {
                         *done_ = true;
                         continue;
                     }
+                    if let (done_ @ false, buf_) = &mut extra {
+                        buf_.push(p_.value_from_str::<String>("extra", arg_)?);
+                        *done_ = true;
+                        continue;
+                    }
                     return Err(p_.unexpected_arg(arg_));
                 }
             }
         }
         Ok(Self {
             src: p_.optional("src", src.1)?,
+            extra: p_.optional("extra", extra.1)?,
 
             switch: p_.required("--switch", switch)?,
             subcommand: p_.subcommand(sub_)?,
@@ -83,9 +93,12 @@ impl Helpful {
 
 impl Sub {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+        let mut flag = Vec::new();
+
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match flag_.as_str() {
+                    "--flag" | "-f" => flag.push(()),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => {
@@ -93,7 +106,7 @@ impl Sub {
                 }
             }
         }
-        Ok(Self {})
+        Ok(Self { flag: p_.optional("--flag", flag)?.is_some() })
     }
 }
 impl Helpful {
@@ -101,9 +114,18 @@ impl Helpful {
 helpful
   Does stuff
 
+  Helpful stuff.
+
 ARGS:
     [src]
       With an arg.
+
+    [extra]
+      Another arg.
+
+      This time, there's some extra info about the
+      arg. Maybe some caveats, or what kinds of
+      values are accepted.
 
 OPTIONS:
     -s, --switch
@@ -113,5 +135,10 @@ SUBCOMMANDS:
 
 helpful sub
   And even a subcommand!
+
+  OPTIONS:
+    -f, --flag
+      With an optional flag. This has a really long
+      description which spans multiple lines.
 ";
 }
