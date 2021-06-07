@@ -11,9 +11,14 @@ xflags! {
         /// arg. Maybe some caveats, or what kinds of
         /// values are accepted.
         optional extra: String
+        /// This arg will become an enum.
+        optional channel: lts | stable | beta | nightly | dev
     {
         /// And a switch.
         required -s, --switch
+
+        /// A list of allocators you happen to like.
+        repeated --malloc mallocs: mimalloc | jemalloc | sys
 
         /// And even a subcommand!
         cmd sub {

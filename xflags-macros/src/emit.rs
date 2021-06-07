@@ -77,6 +77,15 @@ fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
             emit_cmd(buf, sub);
         }
     }
+    cmd.visit_enums(&mut |e| {
+        blank_line(buf);
+        w!(buf, "#[derive(Debug)]\n");
+        w!(buf, "pub enum {} {{\n", e.ident());
+        for var in &e.variants {
+            w!(buf, "    {},\n", camel(var));
+        }
+        w!(buf, "}}\n");
+    })
 }
 
 fn gen_flag_ty(arity: ast::Arity, ty: Option<&ast::Ty>) -> String {
@@ -95,6 +104,7 @@ fn gen_arg_ty(arity: ast::Arity, ty: &ast::Ty) -> String {
         ast::Ty::PathBuf => "PathBuf".into(),
         ast::Ty::OsString => "OsString".into(),
         ast::Ty::FromStr(it) => it.clone(),
+        ast::Ty::Enum(e) => e.ident(),
     };
     match arity {
         ast::Arity::Optional => format!("Option<{}>", ty),
@@ -122,6 +132,23 @@ fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "}}\n");
 }
 
+fn emit_enum_impls(buf: &mut String, cmd: &ast::Cmd) {
+    cmd.visit_enums(&mut |e| {
+        blank_line(buf);
+        w!(buf, "impl core::str::FromStr for {} {{\n", e.ident());
+        w!(buf, "    type Err = String;\n");
+        w!(buf, "    fn from_str(s: &str) -> Result<Self, Self::Err> {{\n");
+        w!(buf, "        match s {{\n");
+        for name in &e.variants {
+            w!(buf, "            {:?} => Ok(Self::{}),\n", name, camel(name));
+        }
+        let msg = format!("unknown value for `{}`: {{:?}}", e.name);
+        w!(buf, "            s => Err(format!({:?}, s)),\n", msg);
+        w!(buf, "        }}\n");
+        w!(buf, "    }}\n");
+        w!(buf, "}}\n");
+    })
+}
 fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
     w!(buf, "impl {} {{\n", camel(&xflags.cmd.name));
     w!(buf, "    fn from_env_() -> xflags::Result<Self> {{\n");
@@ -134,7 +161,8 @@ fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
     w!(buf, "    }}\n");
     w!(buf, "}}\n");
     blank_line(buf);
-    emit_impls_rec(buf, &xflags.cmd)
+    emit_impls_rec(buf, &xflags.cmd);
+    emit_enum_impls(buf, &xflags.cmd);
 }
 
 fn emit_impls_rec(buf: &mut String, cmd: &ast::Cmd) -> () {
@@ -184,6 +212,9 @@ fn emit_impl(buf: &mut String, cmd: &ast::Cmd) -> () {
                     ast::Ty::FromStr(ty) => {
                         w!(buf, "p_.next_value_from_str::<{}>(&flag_)?", ty)
                     }
+                    ast::Ty::Enum(e) => {
+                        w!(buf, "p_.next_value_from_str::<{}>(&flag_)?", e.ident())
+                    }
                 },
                 None => w!(buf, "()"),
             }
@@ -226,6 +257,9 @@ fn emit_impl(buf: &mut String, cmd: &ast::Cmd) -> () {
             match &arg.val.ty {
                 ast::Ty::OsString | ast::Ty::PathBuf => {
                     w!(buf, "arg_.into()")
+                }
+                ast::Ty::Enum(e) => {
+                    w!(buf, "p_.value_from_str::<{}>(\"{}\", arg_)?", e.ident(), arg.val.name);
                 }
                 ast::Ty::FromStr(ty) => {
                     w!(buf, "p_.value_from_str::<{}>(\"{}\", arg_)?", ty, arg.val.name);
@@ -363,7 +397,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
                 ast::Arity::Required => ("<", ">"),
                 ast::Arity::Repeated => ("<", ">..."),
             };
-            w!(buf, "    {}{}{}\n", l, arg.val.name, r);
+            w!(buf, "    {}{}{}\n", l, arg.val.desc(), r);
             if let Some(doc) = &arg.doc {
                 write_lines_indented(buf, doc, 6)
             }
@@ -381,7 +415,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             blank = "\n";
 
             let short = flag.short.as_ref().map(|it| format!("-{}, ", it)).unwrap_or_default();
-            let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
+            let value = flag.val.as_ref().map(|it| format!(" <{}>", it.desc())).unwrap_or_default();
             w!(buf, "    {}--{}{}\n", short, flag.name, value);
             if let Some(doc) = &flag.doc {
                 write_lines_indented(buf, doc, 6);
@@ -401,6 +435,18 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             blank_line(buf);
             blank_line(buf);
             help_rec(buf, &prefix, sub);
+        }
+    }
+}
+
+impl ast::Val {
+    /// usually just the values name, but for enums returns a string containing
+    /// all possible variants, joined by pipes.
+    fn desc(&self) -> std::borrow::Cow<'_, str> {
+        if let ast::Ty::Enum(e) = &self.ty {
+            e.variants.join(" | ").into()
+        } else {
+            self.name.as_str().into()
         }
     }
 }
@@ -453,6 +499,11 @@ impl ast::Val {
         snake(&self.name)
     }
 }
+impl ast::Enum {
+    fn ident(&self) -> String {
+        camel(&self.name)
+    }
+}
 
 fn blank_line(buf: &mut String) {
     w!(buf, "\n");
@@ -473,6 +524,36 @@ fn first_upper(s: &str) -> String {
 
 fn snake(s: &str) -> String {
     s.replace('-', "_")
+}
+
+impl ast::Cmd {
+    pub(crate) fn visit_enums(&self, visitor: &mut impl FnMut(&ast::Enum)) {
+        for arg in self.args.iter() {
+            arg.visit_enums(visitor);
+        }
+        for flag in self.flags.iter() {
+            flag.visit_enums(visitor);
+        }
+        for cmd in self.subcommands.iter() {
+            cmd.visit_enums(visitor);
+        }
+    }
+}
+
+impl ast::Arg {
+    pub(crate) fn visit_enums(&self, visitor: &mut impl FnMut(&ast::Enum)) {
+        if let ast::Ty::Enum(e) = &self.val.ty {
+            visitor(e);
+        }
+    }
+}
+
+impl ast::Flag {
+    pub(crate) fn visit_enums(&self, visitor: &mut impl FnMut(&ast::Enum)) {
+        if let Some(ast::Val { ty: ast::Ty::Enum(e), .. }) = &self.val {
+            visitor(e);
+        }
+    }
 }
 
 #[cfg(test)]
