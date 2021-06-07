@@ -51,7 +51,7 @@ fn try_main() -> Result<()> {
 fn print_usage() {
     eprintln!(
         "\
-Usage: cargo run -p xtask <SUBCOMMAND>
+Usage: cargo run -p xtask -- <SUBCOMMAND>
 
 SUBCOMMANDS:
     ci

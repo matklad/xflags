@@ -1,6 +1,7 @@
 mod repeated_pos;
 mod smoke;
 mod subcommands;
+mod help;
 
 use std::{ffi::OsString, fmt};
 
@@ -37,6 +38,7 @@ fn smoke() {
                 number: 92,
                 data: [],
                 emoji: false,
+                malloc: None,
             }
         "#]],
     );
@@ -57,6 +59,7 @@ fn smoke() {
                     "0xBEEF",
                 ],
                 emoji: false,
+                malloc: None,
             }
         "#]],
     );

@@ -30,6 +30,12 @@ pub(crate) struct Flag {
     pub(crate) val: Option<Val>,
 }
 
+#[derive(Debug)]
+pub(crate) struct Enum {
+    pub(crate) name: String,
+    pub(crate) variants: Vec<String>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Arity {
     Optional,
@@ -48,4 +54,5 @@ pub(crate) enum Ty {
     PathBuf,
     OsString,
     FromStr(String),
+    Enum(Enum),
 }
