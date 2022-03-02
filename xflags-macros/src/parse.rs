@@ -14,6 +14,14 @@ pub(crate) struct Error {
     msg: String,
 }
 
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
 pub(crate) fn parse(ts: TokenStream) -> Result<ast::XFlags> {
     let mut p = Parser::new(ts);
     xflags(&mut p)

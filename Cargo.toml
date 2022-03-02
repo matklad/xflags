@@ -1,6 +1,6 @@
 [package]
 name = "xflags"
-version = "0.2.3" # NB: update me in 3 places
+version = "0.2.4" # NB: update me in 3 places
 description = "Moderately simple command line arguments parser."
 categories = ["command-line-interface"]
 license = "MIT OR Apache-2.0"
@@ -14,4 +14,4 @@ exclude = [".github/", "bors.toml", "rustfmt.toml"]
 members = ["xtask", "xflags-macros"]
 
 [dependencies]
-xflags-macros = { path = "./xflags-macros", version = "=0.2.3" }
+xflags-macros = { path = "./xflags-macros", version = "=0.2.4" }

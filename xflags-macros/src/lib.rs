@@ -3,12 +3,17 @@ mod parse;
 mod emit;
 mod update;
 
-#[cfg(not(test))]
 #[proc_macro]
-pub fn xflags(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let cmd = parse::parse(ts).unwrap();
-    let text = emit::emit(&cmd);
-    text.parse().unwrap()
+pub fn xflags(_ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // Stub out the code, but let rust-analyzer resolve the invocation
+    #[cfg(not(test))]
+    {
+        let cmd = parse::parse(_ts).unwrap();
+        let text = emit::emit(&cmd);
+        text.parse().unwrap()
+    }
+    #[cfg(test)]
+    unimplemented!()
 }
 
 #[cfg(test)]
