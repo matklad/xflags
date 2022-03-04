@@ -11,6 +11,14 @@ pub struct RustAnalyzer {
     pub number: u32,
     pub data: Vec<OsString>,
     pub emoji: bool,
+    pub malloc: Option<Malloc>,
+}
+
+#[derive(Debug)]
+pub enum Malloc {
+    Jemalloc,
+    Mimalloc,
+    Sys,
 }
 
 impl RustAnalyzer {
@@ -45,6 +53,7 @@ impl RustAnalyzer {
         let mut number = Vec::new();
         let mut data = Vec::new();
         let mut emoji = Vec::new();
+        let mut malloc = Vec::new();
 
         let mut workspace = (false, Vec::new());
         let mut jobs = (false, Vec::new());
@@ -57,6 +66,7 @@ impl RustAnalyzer {
                     "--number" | "-n" => number.push(p_.next_value_from_str::<u32>(&flag_)?),
                     "--data" => data.push(p_.next_value(&flag_)?.into()),
                     "--emoji" => emoji.push(()),
+                    "--malloc" => malloc.push(p_.next_value_from_str::<Malloc>(&flag_)?),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => {
@@ -83,7 +93,20 @@ impl RustAnalyzer {
             number: p_.required("--number", number)?,
             data: data,
             emoji: p_.optional("--emoji", emoji)?.is_some(),
+            malloc: p_.optional("--malloc", malloc)?,
         })
+    }
+}
+
+impl core::str::FromStr for Malloc {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "jemalloc" => Ok(Self::Jemalloc),
+            "mimalloc" => Ok(Self::Mimalloc),
+            "sys" => Ok(Self::Sys),
+            s => Err(format!("unknown value for `malloc`: {:?}", s)),
+        }
     }
 }
 impl RustAnalyzer {
@@ -108,5 +131,7 @@ OPTIONS:
     --data <value>
 
     --emoji
+
+    --malloc <jemalloc | mimalloc | sys>
 ";
 }

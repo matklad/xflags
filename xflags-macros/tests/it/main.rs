@@ -38,6 +38,7 @@ fn smoke() {
                 number: 92,
                 data: [],
                 emoji: false,
+                malloc: None,
             }
         "#]],
     );
@@ -58,6 +59,7 @@ fn smoke() {
                     "0xBEEF",
                 ],
                 emoji: false,
+                malloc: None,
             }
         "#]],
     );

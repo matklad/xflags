@@ -11,5 +11,6 @@ xflags! {
         required -n, --number n: u32
         repeated --data value: OsString
         optional --emoji
+        optional --malloc malloc: jemalloc | mimalloc | sys
     }
 }

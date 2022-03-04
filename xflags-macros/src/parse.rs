@@ -132,7 +132,7 @@ fn opt_val(p: &mut Parser) -> Result<Option<ast::Val>, Error> {
 
     let name = p.expect_name()?;
     p.expect_punct(':')?;
-    let ty = ty(p)?;
+    let ty = ty(p, &name)?;
     let res = ast::Val { name, ty };
     Ok(Some(res))
 }
@@ -153,11 +153,22 @@ fn arity(p: &mut Parser) -> Result<ast::Arity> {
     bail!("expected one of `optional`, `required`, `repeated`, got {:?}", p.ts.pop())
 }
 
-fn ty(p: &mut Parser) -> Result<ast::Ty> {
+fn ty(p: &mut Parser, field: &str) -> Result<ast::Ty> {
     let name = p.expect_name()?;
     let res = match name.as_str() {
         "PathBuf" => ast::Ty::PathBuf,
         "OsString" => ast::Ty::OsString,
+        _ if p.eat_punct('|') => {
+            let mut e = ast::Enum { name: field.into(), variants: vec![name] };
+            loop {
+                let variant = p.expect_name()?;
+                e.variants.push(variant);
+                if !p.eat_punct('|') {
+                    break;
+                }
+            }
+            ast::Ty::Enum(e)
+        }
         _ => ast::Ty::FromStr(name),
     };
     Ok(res)
