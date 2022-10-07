@@ -47,66 +47,48 @@ impl Helpful {
 
 impl Helpful {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+        #![allow(non_snake_case)]
         let mut switch = Vec::new();
-
         let mut src = (false, Vec::new());
         let mut extra = (false, Vec::new());
+        let mut sub__flag = Vec::new();
 
-        let mut sub_ = None;
+        let mut state_ = 0u8;
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
-                Ok(flag_) => match flag_.as_str() {
-                    "--switch" | "-s" => switch.push(()),
+                Ok(flag_) => match (state_, flag_.as_str()) {
+                    (0, "--switch" | "-s") => switch.push(()),
+                    (1, "--flag" | "-f") => sub__flag.push(()),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
-                Err(arg_) => {
-                    match arg_.to_str().unwrap_or("") {
-                        "sub" => {
-                            sub_ = Some(HelpfulCmd::Sub(Sub::parse_(p_)?));
-                            break;
+                Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
+                    (0, "sub") => state_ = 1,
+                    (0, _) => {
+                        if let (done_ @ false, buf_) = &mut src {
+                            buf_.push(arg_.into());
+                            *done_ = true;
+                            continue;
                         }
-                        _ => (),
+                        if let (done_ @ false, buf_) = &mut extra {
+                            buf_.push(p_.value_from_str::<String>("extra", arg_)?);
+                            *done_ = true;
+                            continue;
+                        }
+                        return Err(p_.unexpected_arg(arg_));
                     }
-                    if let (done_ @ false, buf_) = &mut src {
-                        buf_.push(arg_.into());
-                        *done_ = true;
-                        continue;
-                    }
-                    if let (done_ @ false, buf_) = &mut extra {
-                        buf_.push(p_.value_from_str::<String>("extra", arg_)?);
-                        *done_ = true;
-                        continue;
-                    }
-                    return Err(p_.unexpected_arg(arg_));
-                }
+                    _ => return Err(p_.unexpected_arg(arg_)),
+                },
             }
         }
-        Ok(Self {
+        Ok(Helpful {
+            switch: p_.required("--switch", switch)?,
             src: p_.optional("src", src.1)?,
             extra: p_.optional("extra", extra.1)?,
-
-            switch: p_.required("--switch", switch)?,
-            subcommand: p_.subcommand(sub_)?,
+            subcommand: match state_ {
+                1 => HelpfulCmd::Sub(Sub { flag: p_.optional("--flag", sub__flag)?.is_some() }),
+                _ => return Err(p_.subcommand_required()),
+            },
         })
-    }
-}
-
-impl Sub {
-    fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
-        let mut flag = Vec::new();
-
-        while let Some(arg_) = p_.pop_flag() {
-            match arg_ {
-                Ok(flag_) => match flag_.as_str() {
-                    "--flag" | "-f" => flag.push(()),
-                    _ => return Err(p_.unexpected_flag(&flag_)),
-                },
-                Err(arg_) => {
-                    return Err(p_.unexpected_arg(arg_));
-                }
-            }
-        }
-        Ok(Self { flag: p_.optional("--flag", flag)?.is_some() })
     }
 }
 impl Helpful {

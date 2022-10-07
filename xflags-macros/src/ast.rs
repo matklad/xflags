@@ -12,6 +12,7 @@ pub(crate) struct Cmd {
     pub(crate) flags: Vec<Flag>,
     pub(crate) subcommands: Vec<Cmd>,
     pub(crate) default: bool,
+    pub(crate) idx: u8,
 }
 
 #[derive(Debug)]

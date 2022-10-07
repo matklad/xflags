@@ -94,6 +94,10 @@ impl Parser {
         format_err!("unexpected argument: {:?}", arg)
     }
 
+    pub fn subcommand_required(&self) -> Error {
+        format_err!("subcommand is required")
+    }
+
     pub fn optional<T>(&self, flag: &str, mut vals: Vec<T>) -> Result<Option<T>> {
         if vals.len() > 1 {
             bail!("flag specified more than once: `{}`", flag)
@@ -106,9 +110,5 @@ impl Parser {
             bail!("flag specified more than once: `{}`", flag)
         }
         vals.pop().ok_or_else(|| format_err!("flag is required: `{}`", flag))
-    }
-
-    pub fn subcommand<T>(&self, cmd: Option<T>) -> Result<T> {
-        cmd.ok_or_else(|| format_err!("subcommand is required"))
     }
 }
