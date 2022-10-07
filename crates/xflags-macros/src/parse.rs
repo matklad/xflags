@@ -1,4 +1,4 @@
-use std::mem;
+use std::{fmt, mem};
 
 #[cfg(not(test))]
 use proc_macro::{Delimiter, TokenStream, TokenTree};
@@ -16,9 +16,9 @@ pub(crate) struct Error {
 
 impl std::error::Error for Error {}
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.msg)
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.msg, f)
     }
 }
 
