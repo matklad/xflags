@@ -4,11 +4,10 @@ mod flags {
     use std::{ffi::OsString, path::PathBuf};
 
     xflags::xflags! {
-        cmd Cmd
+        cmd Cmd {
             required a: OsString
             required b: PathBuf
             required c: String
-        {
         }
     }
 }

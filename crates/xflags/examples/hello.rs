@@ -1,8 +1,7 @@
 mod flags {
     xflags::xflags! {
-        cmd hello
+        cmd hello {
             required name: String
-        {
             optional -e, --emoji
         }
     }

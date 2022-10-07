@@ -27,9 +27,8 @@
 //!     xflags::xflags! {
 //!         src "./examples/basic.rs"
 //!
-//!         cmd my-command
+//!         cmd my-command {
 //!             required path: PathBuf
-//!         {
 //!             optional -v, --verbose
 //!         }
 //!     }
@@ -110,16 +109,16 @@
 //! }
 //! ```
 //!
-//! Positional arguments are specified before the opening curly brace:
+//! Arguments without `--` in then ame are positional.
 //!
 //! ```
 //! use std::{path::PathBuf, ffi::OsString};
 //!
 //! xflags::xflags! {
-//!     cmd positional-arguments
+//!     cmd positional-arguments {
 //!         required program: PathBuf
 //!         repeated args: OsString
-//!     { }
+//!     }
 //! }
 //! ```
 //!
@@ -204,8 +203,8 @@
 //! }
 //! ```
 //!
-//! Commands, arguments, and switches can documented. Doc comments become a part
-//! of generated help:
+//! Commands, arguments, and switches can be documented. Doc comments become a
+//! part of generated help:
 //!
 //! ```
 //! mod flags {
@@ -213,10 +212,9 @@
 //!
 //!     xflags::xflags! {
 //!         /// Run basic system diagnostics.
-//!         cmd healthck
+//!         cmd healthck {
 //!             /// Optional configuration file.
 //!             optional config: PathBuf
-//!         {
 //!             /// Verbosity level, can be repeated multiple times.
 //!             repeated -v, --verbose
 //!             /// Print the help message.

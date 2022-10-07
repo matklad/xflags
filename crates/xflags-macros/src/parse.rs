@@ -66,18 +66,6 @@ fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
         idx,
     };
 
-    while !p.at_delim(Delimiter::Brace) {
-        let doc = opt_doc(p)?;
-        let arity = arity(p)?;
-        match opt_val(p)? {
-            Some(val) => {
-                let arg = ast::Arg { arity, doc, val };
-                res.args.push(arg);
-            }
-            None => bail!("expected ident"),
-        }
-    }
-
     p.enter_delim(Delimiter::Brace)?;
     while !p.end() {
         let doc = opt_doc(p)?;
@@ -94,35 +82,50 @@ fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
                 res.subcommands.rotate_right(1);
             }
         } else {
-            let mut flag = flag(p)?;
-            flag.doc = doc;
-            res.flags.push(flag);
+            let arity = arity(p)?;
+            let is_val = p.lookahead_punct(':', 1);
+            let name = p.expect_name()?;
+            if name.starts_with('-') {
+                let mut flag = flag(p, name)?;
+                flag.doc = doc;
+                flag.arity = arity;
+                res.flags.push(flag)
+            } else if is_val {
+                p.expect_punct(':')?;
+                let ty = ty(p)?;
+                let val = ast::Val { name, ty };
+                let arg = ast::Arg { arity, doc, val };
+                res.args.push(arg);
+            } else {
+                bail!("expected `--flag` or `arg: Type`")
+            }
         }
     }
     p.exit_delim()?;
     Ok(res)
 }
 
-fn flag(p: &mut Parser) -> Result<ast::Flag> {
-    let arity = arity(p)?;
-
-    let mut short = None;
-    let mut name = flag_name(p)?;
-    if !name.starts_with("--") {
+fn flag(p: &mut Parser, name: String) -> Result<ast::Flag> {
+    let short;
+    let long;
+    if name.starts_with("--") {
+        short = None;
+        long = name;
+    } else {
         short = Some(name);
         if !p.eat_punct(',') {
             bail!("long option is required for `{}`", short.unwrap());
         }
-        name = flag_name(p)?;
-        if !name.starts_with("--") {
-            bail!("long name must begin with `--`: `{name}`");
+        long = flag_name(p)?;
+        if !long.starts_with("--") {
+            bail!("long name must begin with `--`: `{long}`");
         }
     }
 
     let val = opt_val(p)?;
     Ok(ast::Flag {
-        arity,
-        name: name[2..].to_string(),
+        arity: ast::Arity::Required,
+        name: long[2..].to_string(),
         short: short.map(|it| it[1..].to_string()),
         doc: None,
         val,
@@ -223,12 +226,6 @@ impl Parser {
         Self { stack: Vec::new(), ts, idx: 0 }
     }
 
-    fn at_delim(&mut self, delimiter: Delimiter) -> bool {
-        match self.ts.last() {
-            Some(TokenTree::Group(g)) => g.delimiter() == delimiter,
-            _ => false,
-        }
-    }
     fn enter_delim(&mut self, delimiter: Delimiter) -> Result<()> {
         match self.ts.pop() {
             Some(TokenTree::Group(g)) if g.delimiter() == delimiter => {

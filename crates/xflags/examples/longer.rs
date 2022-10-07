@@ -24,10 +24,9 @@ mod flags {
             }
 
             /// Benchmark specific analysis operation
-            cmd analysis-bench
+            cmd analysis-bench {
                 /// Directory with Cargo.toml
                 optional path: PathBuf
-            {
                 /// Compute syntax highlighting for this file
                 required --highlight path: PathBuf
                 /// Compute highlighting for this line
