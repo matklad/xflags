@@ -6,8 +6,7 @@ pub(crate) fn in_place(api: &str, path: &Path) {
         Path::new(&dir).join(path)
     };
 
-    let mut text =
-        fs::read_to_string(&path).unwrap_or_else(|_| panic!("failed to read {:?}", path));
+    let mut text = fs::read_to_string(&path).unwrap_or_else(|_| panic!("failed to read {path:?}"));
 
     let (insert_to, indent) = locate(&text);
 

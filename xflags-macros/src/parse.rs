@@ -115,7 +115,7 @@ fn flag(p: &mut Parser) -> Result<ast::Flag> {
         }
         name = flag_name(p)?;
         if !name.starts_with("--") {
-            bail!("long name must begin with `--`: `{}`", name);
+            bail!("long name must begin with `--`: `{name}`");
         }
     }
 
@@ -152,7 +152,7 @@ fn arity(p: &mut Parser) -> Result<ast::Arity> {
         return Ok(ast::Arity::Repeated);
     }
     if let Some(name) = p.eat_name() {
-        bail!("expected one of `optional`, `required`, `repeated`, got `{}`", name)
+        bail!("expected one of `optional`, `required`, `repeated`, got `{name}`")
     }
     bail!("expected one of `optional`, `required`, `repeated`, got {:?}", p.ts.pop())
 }
@@ -197,7 +197,7 @@ fn opt_doc(p: &mut Parser) -> Result<Option<String>> {
 fn cmd_name(p: &mut Parser) -> Result<String> {
     let name = p.expect_name()?;
     if name.starts_with('-') {
-        bail!("command name can't begin with `-`: `{}`", name);
+        bail!("command name can't begin with `-`: `{name}`");
     }
     Ok(name)
 }
@@ -205,7 +205,7 @@ fn cmd_name(p: &mut Parser) -> Result<String> {
 fn flag_name(p: &mut Parser) -> Result<String> {
     let name = p.expect_name()?;
     if !name.starts_with('-') {
-        bail!("flag name should begin with `-`: `{}`", name);
+        bail!("flag name should begin with `-`: `{name}`");
     }
     Ok(name)
 }
@@ -254,7 +254,7 @@ impl Parser {
 
     fn expect_keyword(&mut self, kw: &str) -> Result<()> {
         if !self.eat_keyword(kw) {
-            bail!("expected `{}`", kw)
+            bail!("expected `{kw}`")
         }
         Ok(())
     }
@@ -276,7 +276,7 @@ impl Parser {
     fn expect_name(&mut self) -> Result<String> {
         self.eat_name().ok_or_else(|| {
             let next = self.ts.pop().map(|it| it.to_string()).unwrap_or_default();
-            format_err!("expected a name, got: `{}`", next)
+            format_err!("expected a name, got: `{next}`")
         })
     }
     fn eat_name(&mut self) -> Option<String> {
@@ -312,7 +312,7 @@ impl Parser {
 
     fn expect_punct(&mut self, punct: char) -> Result<()> {
         if !self.eat_punct(punct) {
-            bail!("expected `{}`", punct)
+            bail!("expected `{punct}`")
         }
         Ok(())
     }
