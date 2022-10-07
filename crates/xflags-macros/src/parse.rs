@@ -335,11 +335,18 @@ impl Parser {
     fn expect_string(&mut self) -> Result<String> {
         match self.ts.pop() {
             Some(TokenTree::Literal(lit)) if lit.to_string().starts_with('"') => {
-                let text = lit.to_string();
-                let res = text.trim_matches('"').to_string();
+                let res = str_lit_value(lit.to_string());
                 Ok(res)
             }
             _ => bail!("expected a string"),
         }
     }
+}
+
+/// "Parser" a string literal into the corresponding value.
+///
+/// Really needs support in the proc_macro library:
+/// <https://internals.rust-lang.org/t/getting-value-out-of-proc-macro-literal/14140>
+fn str_lit_value(lit: String) -> String {
+    lit.trim_matches('"').replace("\\'", "'")
 }
