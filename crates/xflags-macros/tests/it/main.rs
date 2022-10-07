@@ -197,3 +197,36 @@ fn subcommands() {
 
     check(subcommands::RustAnalyzer::from_vec, "", expect![[r#"subcommand is required"#]]);
 }
+
+#[test]
+fn subcommand_flag_inheritance() {
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "server watch --verbose --dir .",
+        expect![[r#"
+            RustAnalyzer {
+                verbose: 1,
+                subcommand: Server(
+                    Server {
+                        dir: Some(
+                            ".",
+                        ),
+                        subcommand: Watch(
+                            Watch,
+                        ),
+                    },
+                ),
+            }
+        "#]],
+    );
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "analysis-stats --verbose --dir .",
+        expect!["unexpected flag: `--dir`"],
+    );
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "--dir . server",
+        expect!["unexpected flag: `--dir`"],
+    );
+}

@@ -78,8 +78,8 @@ impl RustAnalyzer {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
-                    (0, "--verbose" | "-v") => verbose.push(()),
-                    (1, "--dir") => server__dir.push(p_.next_value(&flag_)?.into()),
+                    (0 | 1 | 2 | 3 | 4, "--verbose" | "-v") => verbose.push(()),
+                    (1 | 2 | 3, "--dir") => server__dir.push(p_.next_value(&flag_)?.into()),
                     (1, _) => {
                         p_.push_back(Ok(flag_));
                         state_ = 2;

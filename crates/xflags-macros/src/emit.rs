@@ -187,10 +187,11 @@ fn emit_locals_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
 
 fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     for flag in &cmd.flags {
-        w!(buf, "({}, ", cmd.idx);
-        w!(buf, "\"--{}\"", flag.name);
+        w!(buf, "(");
+        emit_all_ids_rec(buf, cmd);
+        w!(buf, ", \"--{}\"", flag.name);
         if let Some(short) = &flag.short {
-            w!(buf, "| \"-{}\"", short);
+            w!(buf, "| \"-{short}\"");
         }
         w!(buf, ") => {prefix}{}.push(", flag.ident());
         match &flag.val {
@@ -308,7 +309,7 @@ fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     if cmd.has_subcommands() {
         w!(buf, "subcommand: match state_ {{\n");
         for sub in &cmd.subcommands {
-            emit_ids_rec(buf, sub);
+            emit_leaf_ids_rec(buf, sub);
             w!(buf, " => {}::{}(", cmd.cmd_enum_ident(), sub.ident());
             let l = prefix.len();
             prefix.push_str(&snake(&sub.name));
@@ -324,13 +325,20 @@ fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     w!(buf, "}}");
 }
 
-fn emit_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
+fn emit_leaf_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
     if cmd.has_subcommands() {
         for sub in &cmd.subcommands {
-            emit_ids_rec(buf, sub)
+            emit_leaf_ids_rec(buf, sub)
         }
     } else {
         w!(buf, "| {}", cmd.idx)
+    }
+}
+
+fn emit_all_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
+    w!(buf, "| {}", cmd.idx);
+    for sub in &cmd.subcommands {
+        emit_all_ids_rec(buf, sub)
     }
 }
 

@@ -3,8 +3,20 @@
 //! It is intended for use in development tools, so it emphasizes fast compile
 //! times and convenience at the expense of features.
 //!
-//! If you need something more fancy, consider using
-//! [`clap`](https://docs.rs/clap/2.33.3/clap/) instead.
+//! Rough decision tree for picking argument parsing library:
+//!
+//! * if you need all of the features and don't care about minimalism, use
+//!   [clap](https://github.com/clap-rs/clap)
+//! * if you want to be maximally minimal, need only basic features (eg, no help
+//!   generation), and want to be pedantically correct, use
+//!   [lexopt](https://github.com/blyxxyz/lexopt)
+//! * if you want to get things done fast (eg, you want auto help, but not at
+//!   the cost of waiting for syn to compile), consider this crate.
+//!
+//! The secret sauce of xflags is that it is the opposite of a derive macro.
+//! Rather than generating a command line grammar from a Rust struct, `xflags`
+//! generates Rust structs based on input grammar. The grammar definition is
+//! both shorter and simpler to write, and is lighter on compile times.
 //!
 //! ## Example
 //!
@@ -111,7 +123,8 @@
 //! }
 //! ```
 //!
-//! Nesting **cmd** is allowed:
+//! Nesting **cmd** is allowed. `xflag` automatically generates boilerplate
+//! enums for subcommands:
 //!
 //! ```ignore
 //! xflags::xflags! {
@@ -159,6 +172,21 @@
 //!     }
 //! }
 //! // generated end
+//! ```
+//!
+//! Switches are always "inherited". That is, both `app init --home tmp` and
+//! `app --home tmp init` produce the same result given the following
+//! definition:
+//!
+//! ```
+//! use std::path::PathBuf;
+//!
+//! xflags::xflags! {
+//!    cmd app {
+//!       optional --home path: PathBuf
+//!       cmd init { }
+//!    }
+//! }
 //! ```
 //!
 //! To make subcommand name optional use the **default** keyword to mark a
@@ -215,9 +243,9 @@
 //! # fn run_checks(_config: Option<std::path::PathBuf>, _verbosity: u32) {}
 //! ```
 //!
-//! The **src** keyword controlls how the code generation works. If it is
-//! absent, `xflags` acts as a typical procedure macro, which generates a bunch
-//! of structs and impls.
+//! The **src** keyword controls how the code generation works. If it is absent,
+//! `xflags` acts as a typical procedure macro, which generates a bunch of
+//! structs and impls.
 //!
 //! If the **src** keyword is present, it should specify the path to the file
 //! with `xflags!` invocation. The path should be relative to the directory with
@@ -226,7 +254,7 @@
 //! directly to the specified file.
 //!
 //! By convention, `xflag!` macro should be invoked from the `flags` submodule.
-//! The `flags::` preffix should be used to refer to command names. Additional
+//! The `flags::` prefix should be used to refer to command names. Additional
 //! validation logic can go to the `flags` module:
 //!
 //! ```
