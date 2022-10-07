@@ -22,9 +22,30 @@ impl fmt::Display for Error {
     }
 }
 
-pub(crate) fn parse(ts: TokenStream) -> Result<ast::XFlags> {
-    let mut p = Parser::new(ts);
-    xflags(&mut p)
+pub(crate) fn xflags(ts: TokenStream) -> Result<ast::XFlags> {
+    let p = &mut Parser::new(ts);
+    let src = if p.eat_keyword("src") { Some(p.expect_string()?) } else { None };
+    let doc = opt_doc(p)?;
+    let mut cmd = cmd(p)?;
+    cmd.doc = doc;
+    let res = ast::XFlags { src, cmd };
+    Ok(res)
+}
+
+pub(crate) fn parse_or_exit(ts: TokenStream) -> Result<ast::XFlags> {
+    let p = &mut Parser::new(ts);
+    let mut cmd = anon_cmd(p)?;
+    assert!(cmd.subcommands.is_empty());
+    let help = ast::Flag {
+        arity: ast::Arity::Optional,
+        name: "help".to_string(),
+        short: Some("h".to_string()),
+        doc: Some("Prints help information.".to_string()),
+        val: None,
+    };
+    cmd.flags.push(help);
+    let res = ast::XFlags { src: None, cmd };
+    Ok(res)
 }
 
 macro_rules! format_err {
@@ -40,22 +61,25 @@ macro_rules! bail {
     };
 }
 
-fn xflags(p: &mut Parser) -> Result<ast::XFlags> {
-    let src = if p.eat_keyword("src") { Some(p.expect_string()?) } else { None };
-    let doc = opt_doc(p)?;
-    let mut cmd = cmd(p)?;
-    cmd.doc = doc;
-    let res = ast::XFlags { src, cmd };
-    Ok(res)
+fn anon_cmd(p: &mut Parser) -> Result<ast::Cmd> {
+    cmd_impl(p, true)
 }
 
 fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
-    p.expect_keyword("cmd")?;
+    cmd_impl(p, false)
+}
+
+fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
+    let name = if anon {
+        String::new()
+    } else {
+        p.expect_keyword("cmd")?;
+        cmd_name(p)?
+    };
 
     let idx = p.idx;
     p.idx += 1;
 
-    let name = cmd_name(p)?;
     let mut res = ast::Cmd {
         name,
         doc: None,
@@ -66,11 +90,13 @@ fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
         idx,
     };
 
-    p.enter_delim(Delimiter::Brace)?;
+    if !anon {
+        p.enter_delim(Delimiter::Brace)?;
+    }
     while !p.end() {
         let doc = opt_doc(p)?;
-        let default = p.eat_keyword("default");
-        if default || p.at_keyword("cmd") {
+        let default = !anon && p.eat_keyword("default");
+        if !anon && (default || p.at_keyword("cmd")) {
             let mut cmd = cmd(p)?;
             cmd.doc = doc;
             res.subcommands.push(cmd);
@@ -101,7 +127,9 @@ fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
             }
         }
     }
-    p.exit_delim()?;
+    if !anon {
+        p.exit_delim()?;
+    }
     Ok(res)
 }
 

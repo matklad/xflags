@@ -18,7 +18,29 @@
 //! generates Rust structs based on input grammar. The grammar definition is
 //! both shorter and simpler to write, and is lighter on compile times.
 //!
+//! `xflags` supports "immediate" mode of parsing flags into "invisible" struct:
+//!
+//! ```no_run
+//! use std::path::PathBuf;
+//!
+//! fn main() {
+//!     let flags = xflags::parse_or_exit! {
+//!         optional -r,--recursive
+//!         required path: PathBuf
+//!     };
+//!
+//!     println!(
+//!         "removing {}{}",
+//!         flags.path.display(),
+//!         if flags.recursive { "recursively" } else { "" },
+//!     )
+//! }
+//! ```
+//!
 //! ## Example
+//!
+//! However, for non-tiny programs you would typically want full syntax, which
+//! also generates a Rust struct to hold a representation of arguments.
 //!
 //! ```
 //! mod flags {
@@ -282,7 +304,7 @@ use std::fmt;
 /// Generates a parser for command line arguments from a DSL.
 ///
 /// See the module-level for detailed syntax specification.
-pub use xflags_macros::xflags;
+pub use xflags_macros::{parse_or_exit, xflags};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 

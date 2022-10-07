@@ -4,6 +4,12 @@ pub(crate) struct XFlags {
     pub(crate) cmd: Cmd,
 }
 
+impl XFlags {
+    pub fn is_anon(&self) -> bool {
+        self.cmd.name.is_empty()
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct Cmd {
     pub(crate) name: String,

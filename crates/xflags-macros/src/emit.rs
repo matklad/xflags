@@ -2,14 +2,24 @@ use crate::{ast, update};
 
 use std::{env, fmt::Write, path::Path};
 
+macro_rules! w {
+    ($($tt:tt)*) => {
+        drop(write!($($tt)*))
+    };
+}
+
 pub(crate) fn emit(xflags: &ast::XFlags) -> String {
     let mut buf = String::new();
+
+    if xflags.is_anon() {
+        w!(buf, "{{\n");
+    }
 
     emit_cmd(&mut buf, &xflags.cmd);
     blank_line(&mut buf);
     emit_api(&mut buf, xflags);
 
-    if env::var("UPDATE_XFLAGS").is_ok() {
+    if !xflags.is_anon() && env::var("UPDATE_XFLAGS").is_ok() {
         if let Some(src) = &xflags.src {
             update::in_place(&buf, Path::new(src.as_str()))
         } else {
@@ -22,16 +32,15 @@ pub(crate) fn emit(xflags: &ast::XFlags) -> String {
     }
 
     blank_line(&mut buf);
-    emit_impls(&mut buf, &xflags);
+    emit_impls(&mut buf, xflags);
     emit_help(&mut buf, xflags);
 
-    buf
-}
+    if xflags.is_anon() {
+        emit_parse_or_exit(&mut buf);
+        w!(buf, "}}\n");
+    }
 
-macro_rules! w {
-    ($($tt:tt)*) => {
-        drop(write!($($tt)*))
-    };
+    buf
 }
 
 fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
@@ -377,15 +386,23 @@ fn write_lines_indented(buf: &mut String, multiline_str: &str, indent: usize) {
 }
 
 fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
-    w!(buf, "{}{}\n", prefix, cmd.name);
+    let mut empty_help = true;
+    if !cmd.name.is_empty() {
+        empty_help = false;
+        w!(buf, "{}{}\n", prefix, cmd.name);
+    }
     if let Some(doc) = &cmd.doc {
+        empty_help = false;
         write_lines_indented(buf, doc, 2);
     }
     let indent = if prefix.is_empty() { "" } else { "  " };
 
     let args = cmd.args_with_default();
     if !args.is_empty() {
-        blank_line(buf);
+        if !empty_help {
+            blank_line(buf);
+        }
+        empty_help = false;
         w!(buf, "{}ARGS:\n", indent);
 
         let mut blank = "";
@@ -407,7 +424,9 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
 
     let flags = cmd.flags_with_default();
     if !flags.is_empty() {
-        blank_line(buf);
+        if !empty_help {
+            blank_line(buf);
+        }
         w!(buf, "{indent}OPTIONS:\n");
 
         let mut blank = "";
@@ -440,8 +459,22 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     }
 }
 
+fn emit_parse_or_exit(buf: &mut String) {
+    w!(
+        buf,
+        "match Flags::from_env() {{
+            Ok(flags) if flags.help => {{ println!(\"{{}}\", Flags::HELP); ::std::process::exit(0) }}
+            Ok(flags) => flags,
+            Err(err) => {{ eprintln!(\"{{}}\", err); ::std::process::exit(2) }}
+        }}"
+    )
+}
+
 impl ast::Cmd {
     fn ident(&self) -> String {
+        if self.name.is_empty() {
+            return "Flags".to_string();
+        }
         camel(&self.name)
     }
     fn cmd_enum_ident(&self) -> String {
