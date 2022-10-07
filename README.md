@@ -11,9 +11,8 @@ mod flags {
     xflags::xflags! {
         src "./examples/basic.rs"
 
-        cmd my-command
+        cmd my-command {
             required path: PathBuf
-        {
             optional -v, --verbose
         }
     }

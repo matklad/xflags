@@ -8,8 +8,10 @@ pub fn xflags(_ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Stub out the code, but let rust-analyzer resolve the invocation
     #[cfg(not(test))]
     {
-        let cmd = parse::parse(_ts).unwrap();
-        let text = emit::emit(&cmd);
+        let text = match parse::parse(_ts) {
+            Ok(cmd) => emit::emit(&cmd),
+            Err(err) => format!("compile_error!(\"invalid flags syntax, {err}\");"),
+        };
         text.parse().unwrap()
     }
     #[cfg(test)]

@@ -11,9 +11,8 @@ xflags! {
             }
         }
 
-        cmd analysis-stats
+        cmd analysis-stats {
             required path: PathBuf
-        {
             optional --parallel
         }
     }
