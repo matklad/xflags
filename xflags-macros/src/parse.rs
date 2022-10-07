@@ -52,6 +52,9 @@ fn xflags(p: &mut Parser) -> Result<ast::XFlags> {
 fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
     p.expect_keyword("cmd")?;
 
+    let idx = p.idx;
+    p.idx += 1;
+
     let name = cmd_name(p)?;
     let mut res = ast::Cmd {
         name,
@@ -60,6 +63,7 @@ fn cmd(p: &mut Parser) -> Result<ast::Cmd> {
         flags: Vec::new(),
         subcommands: Vec::new(),
         default: false,
+        idx,
     };
 
     while !p.at_delim(Delimiter::Brace) {
@@ -209,13 +213,14 @@ fn flag_name(p: &mut Parser) -> Result<String> {
 struct Parser {
     stack: Vec<Vec<TokenTree>>,
     ts: Vec<TokenTree>,
+    idx: u8,
 }
 
 impl Parser {
     fn new(ts: TokenStream) -> Self {
         let mut ts = ts.into_iter().collect::<Vec<_>>();
         ts.reverse();
-        Self { stack: Vec::new(), ts }
+        Self { stack: Vec::new(), ts, idx: 0 }
     }
 
     fn at_delim(&mut self, delimiter: Delimiter) -> bool {

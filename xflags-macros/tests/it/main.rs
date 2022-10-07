@@ -67,9 +67,10 @@ fn smoke() {
         "-n 92 --werbose",
         expect![[r#"unexpected flag: `--werbose`"#]],
     );
-    check(smoke::RustAnalyzer::from_vec, "", expect![[r#"flag is required: `workspace`"#]]);
+    check(smoke::RustAnalyzer::from_vec, "", expect!["flag is required: `--number`"]);
     check(smoke::RustAnalyzer::from_vec, ".", expect![[r#"flag is required: `--number`"#]]);
     check(smoke::RustAnalyzer::from_vec, "-n", expect![[r#"expected a value for `-n`"#]]);
+    check(smoke::RustAnalyzer::from_vec, "-n 92", expect!["flag is required: `workspace`"]);
     check(
         smoke::RustAnalyzer::from_vec,
         "-n lol",

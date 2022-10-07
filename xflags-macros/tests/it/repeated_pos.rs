@@ -36,41 +36,46 @@ impl RepeatedPos {
 
 impl RepeatedPos {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
+        #![allow(non_snake_case)]
         let mut a = (false, Vec::new());
         let mut b = (false, Vec::new());
         let mut c = (false, Vec::new());
         let mut rest = (false, Vec::new());
 
+        let mut state_ = 0u8;
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
-                Ok(flag_) => match flag_.as_str() {
+                Ok(flag_) => match (state_, flag_.as_str()) {
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
-                Err(arg_) => {
-                    if let (done_ @ false, buf_) = &mut a {
-                        buf_.push(arg_.into());
-                        *done_ = true;
-                        continue;
+                Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
+                    (0, _) => {
+                        if let (done_ @ false, buf_) = &mut a {
+                            buf_.push(arg_.into());
+                            *done_ = true;
+                            continue;
+                        }
+                        if let (done_ @ false, buf_) = &mut b {
+                            buf_.push(p_.value_from_str::<u32>("b", arg_)?);
+                            *done_ = true;
+                            continue;
+                        }
+                        if let (done_ @ false, buf_) = &mut c {
+                            buf_.push(arg_.into());
+                            *done_ = true;
+                            continue;
+                        }
+                        if let (false, buf_) = &mut rest {
+                            buf_.push(arg_.into());
+                            continue;
+                        }
+                        return Err(p_.unexpected_arg(arg_));
                     }
-                    if let (done_ @ false, buf_) = &mut b {
-                        buf_.push(p_.value_from_str::<u32>("b", arg_)?);
-                        *done_ = true;
-                        continue;
-                    }
-                    if let (done_ @ false, buf_) = &mut c {
-                        buf_.push(arg_.into());
-                        *done_ = true;
-                        continue;
-                    }
-                    if let (false, buf_) = &mut rest {
-                        buf_.push(arg_.into());
-                        continue;
-                    }
-                    return Err(p_.unexpected_arg(arg_));
-                }
+                    _ => return Err(p_.unexpected_arg(arg_)),
+                },
             }
         }
-        Ok(Self {
+        Ok(RepeatedPos {
             a: p_.required("a", a.1)?,
             b: p_.optional("b", b.1)?,
             c: p_.optional("c", c.1)?,
