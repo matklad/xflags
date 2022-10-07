@@ -57,7 +57,7 @@ impl Helpful {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
-                    (0, "--switch" | "-s") => switch.push(()),
+                    (0 | 1, "--switch" | "-s") => switch.push(()),
                     (1, "--flag" | "-f") => sub__flag.push(()),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
