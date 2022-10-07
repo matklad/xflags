@@ -1,6 +1,6 @@
 use crate::{ast, update};
 
-use std::{fmt::Write, path::Path};
+use std::{env, fmt::Write, path::Path};
 
 pub(crate) fn emit(xflags: &ast::XFlags) -> String {
     let mut buf = String::new();
@@ -9,7 +9,7 @@ pub(crate) fn emit(xflags: &ast::XFlags) -> String {
     blank_line(&mut buf);
     emit_api(&mut buf, xflags);
 
-    if std::env::var("UPDATE_XFLAGS").is_ok() {
+    if env::var("UPDATE_XFLAGS").is_ok() {
         if let Some(src) = &xflags.src {
             update::in_place(&buf, Path::new(src.as_str()))
         } else {
@@ -45,7 +45,7 @@ fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
 
     for arg in &cmd.args {
         let ty = gen_arg_ty(arg.arity, &arg.val.ty);
-        w!(buf, "    pub {}: {},\n", arg.val.ident(), ty);
+        w!(buf, "    pub {}: {ty},\n", arg.val.ident());
     }
 
     if !cmd.args.is_empty() && !cmd.flags.is_empty() {
@@ -54,7 +54,7 @@ fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
 
     for flag in &cmd.flags {
         let ty = gen_flag_ty(flag.arity, flag.val.as_ref().map(|it| &it.ty));
-        w!(buf, "    pub {}: {},\n", flag.ident(), ty);
+        w!(buf, "    pub {}: {ty},\n", flag.ident());
     }
 
     if cmd.has_subcommands() {
@@ -67,8 +67,8 @@ fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
         w!(buf, "#[derive(Debug)]\n");
         w!(buf, "pub enum {} {{\n", cmd.cmd_enum_ident());
         for sub in &cmd.subcommands {
-            let name = camel(&sub.name);
-            w!(buf, "    {}({}),\n", name, name);
+            let name = sub.ident();
+            w!(buf, "    {name}({name}),\n");
         }
         w!(buf, "}}\n");
 
@@ -104,7 +104,7 @@ fn gen_arg_ty(arity: ast::Arity, ty: &ast::Ty) -> String {
 }
 
 fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
-    w!(buf, "impl {} {{\n", camel(&xflags.cmd.name));
+    w!(buf, "impl {} {{\n", xflags.cmd.ident());
 
     w!(buf, "    pub const HELP: &'static str = Self::HELP_;\n");
     blank_line(buf);
@@ -123,7 +123,7 @@ fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
 }
 
 fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
-    w!(buf, "impl {} {{\n", camel(&xflags.cmd.name));
+    w!(buf, "impl {} {{\n", xflags.cmd.ident());
     w!(buf, "    fn from_env_() -> xflags::Result<Self> {{\n");
     w!(buf, "        let mut p = xflags::rt::Parser::new_from_env();\n");
     w!(buf, "        Self::parse_(&mut p)\n");
@@ -134,12 +134,11 @@ fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
     w!(buf, "    }}\n");
     w!(buf, "}}\n");
     blank_line(buf);
-    emit_newstyle_impl(buf, &xflags.cmd)
-    // emit_impls_rec(buf, &xflags.cmd)
+    emit_parse(buf, &xflags.cmd)
 }
 
-fn emit_newstyle_impl(buf: &mut String, cmd: &ast::Cmd) {
-    w!(buf, "impl {} {{\n", camel(&cmd.name));
+fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
+    w!(buf, "impl {} {{\n", cmd.ident());
     w!(buf, "fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {{\n");
     w!(buf, "#![allow(non_snake_case)]\n");
 
@@ -179,11 +178,9 @@ fn emit_locals_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     for arg in &cmd.args {
         w!(buf, "let mut {prefix}{} = (false, Vec::new());\n", arg.val.ident());
     }
-    for cmd in &cmd.subcommands {
-        let l = prefix.len();
-        prefix.push_str(&snake(&cmd.name));
-        prefix.push_str("__");
-        emit_locals_rec(buf, prefix, cmd);
+    for sub in &cmd.subcommands {
+        let l = sub.push_prefix(prefix);
+        emit_locals_rec(buf, prefix, sub);
         prefix.truncate(l);
     }
 }
@@ -212,11 +209,9 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     if let Some(sub) = cmd.default_subcommand() {
         w!(buf, "({}, _) => {{ p_.push_back(Ok(flag_)); state_ = {}; }}", cmd.idx, sub.idx);
     }
-    for cmd in &cmd.subcommands {
-        let l = prefix.len();
-        prefix.push_str(&snake(&cmd.name));
-        prefix.push_str("__");
-        emit_match_flag_rec(buf, prefix, cmd);
+    for sub in &cmd.subcommands {
+        let l = sub.push_prefix(prefix);
+        emit_match_flag_rec(buf, prefix, sub);
         prefix.truncate(l);
     }
 }
@@ -262,17 +257,15 @@ fn emit_match_arg_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         w!(buf, "}}\n");
     }
 
-    for cmd in &cmd.subcommands {
-        let l = prefix.len();
-        prefix.push_str(&snake(&cmd.name));
-        prefix.push_str("__");
-        emit_match_arg_rec(buf, prefix, cmd);
+    for sub in &cmd.subcommands {
+        let l = sub.push_prefix(prefix);
+        emit_match_arg_rec(buf, prefix, sub);
         prefix.truncate(l);
     }
 }
 
 fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
-    w!(buf, "{} {{\n", camel(&cmd.name));
+    w!(buf, "{} {{\n", cmd.ident());
 
     for flag in &cmd.flags {
         w!(buf, "{}: ", flag.ident());
@@ -316,7 +309,7 @@ fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         w!(buf, "subcommand: match state_ {{\n");
         for sub in &cmd.subcommands {
             emit_ids_rec(buf, sub);
-            w!(buf, " => {}Cmd::{}(", camel(&cmd.name), camel(&sub.name));
+            w!(buf, " => {}::{}(", cmd.cmd_enum_ident(), sub.ident());
             let l = prefix.len();
             prefix.push_str(&snake(&sub.name));
             prefix.push_str("__");
@@ -361,7 +354,7 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
     let help = format!("{:?}", help);
     let help = help.replace("\\n", "\n").replacen("\"", "\"\\\n", 1);
 
-    w!(buf, "const HELP_: &'static str = {};", help);
+    w!(buf, "const HELP_: &'static str = {help};");
     w!(buf, "}}\n");
 }
 
@@ -370,7 +363,7 @@ fn write_lines_indented(buf: &mut String, multiline_str: &str, indent: usize) {
         if line.is_empty() {
             w!(buf, "\n")
         } else {
-            w!(buf, "{blank:indent$}{}\n", line, indent = indent, blank = "");
+            w!(buf, "{blank:indent$}{line}\n", blank = "");
         }
     }
 }
@@ -389,7 +382,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
 
         let mut blank = "";
         for arg in &args {
-            w!(buf, "{}", blank);
+            w!(buf, "{blank}");
             blank = "\n";
 
             let (l, r) = match arg.arity {
@@ -397,7 +390,7 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
                 ast::Arity::Required => ("<", ">"),
                 ast::Arity::Repeated => ("<", ">..."),
             };
-            w!(buf, "    {}{}{}\n", l, arg.val.name, r);
+            w!(buf, "    {l}{}{r}\n", arg.val.name);
             if let Some(doc) = &arg.doc {
                 write_lines_indented(buf, doc, 6)
             }
@@ -407,16 +400,16 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     let flags = cmd.flags_with_default();
     if !flags.is_empty() {
         blank_line(buf);
-        w!(buf, "{}OPTIONS:\n", indent);
+        w!(buf, "{indent}OPTIONS:\n");
 
         let mut blank = "";
         for flag in &flags {
-            w!(buf, "{}", blank);
+            w!(buf, "{blank}",);
             blank = "\n";
 
-            let short = flag.short.as_ref().map(|it| format!("-{}, ", it)).unwrap_or_default();
+            let short = flag.short.as_ref().map(|it| format!("-{it}, ")).unwrap_or_default();
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
-            w!(buf, "    {}--{}{}\n", short, flag.name, value);
+            w!(buf, "    {short}--{}{value}\n", flag.name);
             if let Some(doc) = &flag.doc {
                 write_lines_indented(buf, doc, 6);
             }
@@ -445,6 +438,12 @@ impl ast::Cmd {
     }
     fn cmd_enum_ident(&self) -> String {
         format!("{}Cmd", self.ident())
+    }
+    fn push_prefix(&self, buf: &mut String) -> usize {
+        let l = buf.len();
+        buf.push_str(&snake(&self.name));
+        buf.push_str("__");
+        l
     }
     fn has_subcommands(&self) -> bool {
         !self.subcommands.is_empty()
