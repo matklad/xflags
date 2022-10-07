@@ -341,7 +341,7 @@ fn emit_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
     }
 }
 
-fn emit_default_transitions(buf: &mut String, cmd: &ast::Cmd)  {
+fn emit_default_transitions(buf: &mut String, cmd: &ast::Cmd) {
     if let Some(sub) = cmd.default_subcommand() {
         w!(buf, "state_ = if state_ == {} {{ {} }} else {{ state_ }};", cmd.idx, sub.idx);
     }
@@ -544,10 +544,10 @@ mod tests {
 
     #[test]
     fn gen_it() {
-        let test_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/it");
+        let test_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
 
         let mut did_update = false;
-        for entry in fs::read_dir(test_dir.join("src")).unwrap() {
+        for entry in fs::read_dir(test_dir.join("data")).unwrap() {
             let entry = entry.unwrap();
 
             let text = fs::read_to_string(entry.path()).unwrap();
@@ -565,7 +565,7 @@ mod tests {
             );
 
             let name = entry.file_name();
-            did_update |= update_on_disk_if_different(&test_dir.join(name), code);
+            did_update |= update_on_disk_if_different(&test_dir.join("it").join(name), code);
 
             if fmt.is_none() {
                 panic!("syntax error");
