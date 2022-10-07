@@ -1,0 +1,13 @@
+[package]
+name = "xflags"
+description = "Moderately simple command line arguments parser."
+categories = ["command-line-interface"]
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+
+[dependencies]
+xflags-macros = { path = "../xflags-macros", version = "=0.2.4" }

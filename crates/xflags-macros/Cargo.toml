@@ -1,0 +1,16 @@
+[package]
+name = "xflags-macros"
+description = "Private implementation details of xflags."
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[lib]
+proc-macro = true
+
+[dev-dependencies]
+proc-macro2 = "1"
+expect-test = "1"
+xflags = { path = "../xflags" }

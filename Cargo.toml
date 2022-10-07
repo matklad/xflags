@@ -1,17 +1,9 @@
-[package]
-name = "xflags"
-version = "0.2.4" # NB: update me in 3 places
-description = "Moderately simple command line arguments parser."
-categories = ["command-line-interface"]
+[workspace]
+members = ["xtask/", "crates/*"]
+
+[workspace.package]
+version = "0.2.4" # NB: update the dep!
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/matklad/xflags"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 edition = "2021"
-
-exclude = [".github/", "bors.toml", "rustfmt.toml"]
-
-[workspace]
-members = ["xtask", "xflags-macros"]
-
-[dependencies]
-xflags-macros = { path = "./xflags-macros", version = "=0.2.4" }

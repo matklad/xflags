@@ -1,12 +1,19 @@
 #[cfg(test)]
 mod tidy;
 
-use std::time::Instant;
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
 use xshell::{cmd, Shell};
 
 fn main() -> xshell::Result<()> {
     let sh = Shell::new()?;
+
+    cmd!(sh, "rustup toolchain install stable --no-self-update").run()?;
+    let _e = sh.push_env("RUSTUP_TOOLCHAIN", "stable");
+    cmd!(sh, "rustc --version").run()?;
 
     {
         let _s = section("BUILD");
@@ -18,26 +25,34 @@ fn main() -> xshell::Result<()> {
         cmd!(sh, "cargo test --workspace -- --nocapture").run()?;
     }
 
-    {
-        let _s = section("PUBLISH");
+    let version = cmd!(sh, "cargo pkgid -p xflags").read()?.rsplit_once('#').unwrap().1.to_string();
+    let tag = format!("v{}", version);
 
-        let version = cmd!(sh, "cargo pkgid").read()?.rsplit_once('#').unwrap().1.to_string();
-        let tag = format!("v{version}");
+    let current_branch = cmd!(sh, "git branch --show-current").read()?;
+    let tag_exists =
+        cmd!(sh, "git tag --list").read()?.split_ascii_whitespace().any(|it| it == &tag);
 
-        let current_branch = cmd!(sh, "git branch --show-current").read()?;
-        let has_tag = cmd!(sh, "git tag --list").read()?.lines().any(|it| it.trim() == tag);
-        let dry_run = sh.var("CI").is_err() || has_tag || current_branch != "master";
-        eprintln!("Publishing{}!", if dry_run { " (dry run)" } else { "" });
+    if current_branch == "master" && !tag_exists {
+        cmd!(sh, "git tag v{version}").run()?;
 
-        let dry_run_arg = if dry_run { Some("--dry-run") } else { None };
-        cmd!(sh, "cargo publish {dry_run_arg...}").run()?;
-        if dry_run {
-            eprintln!("{}", cmd!(sh, "git tag {tag}"));
-            eprintln!("{}", cmd!(sh, "git push --tags"));
-        } else {
-            cmd!(sh, "git tag {tag}").run()?;
-            cmd!(sh, "git push --tags").run()?;
+        {
+            cmd!(sh, "cargo publish -p xflags-macros").run()?;
+            for _ in 0..100 {
+                thread::sleep(Duration::from_secs(3));
+                let err_msg =
+                    cmd!(sh, "cargo install xflags-macros --version {version} --bin non-existing")
+                        .ignore_status()
+                        .read_stderr()?;
+
+                let not_found = err_msg.contains("could not find ");
+                let tried_installing = err_msg.contains("Installing");
+                assert!(not_found ^ tried_installing);
+                if tried_installing {
+                    break;
+                }
+            }
         }
+        cmd!(sh, "cargo publish -p xflags").run()?;
     }
 
     Ok(())
