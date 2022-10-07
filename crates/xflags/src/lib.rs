@@ -179,9 +179,11 @@
 //! definition:
 //!
 //! ```
+//! use std::path::PathBuf;
+//!
 //! xflags::xflags! {
 //!    cmd app {
-//!       optional --home: PathBuf
+//!       optional --home path: PathBuf
 //!       cmd init { }
 //!    }
 //! }
