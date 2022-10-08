@@ -23,17 +23,16 @@ mod flags {
     #[derive(Debug)]
     pub struct MyCommand {
         pub path: PathBuf,
-
         pub verbose: bool,
     }
 
     impl MyCommand {
-        pub const HELP: &'static str = Self::HELP_;
-
+        pub fn from_env_or_exit() -> xflags::Result<Self> {
+            Self::from_env_()
+        }
         pub fn from_env() -> xflags::Result<Self> {
             Self::from_env_()
         }
-
         pub fn from_vec(args: Vec<std::ffi::OsString>) -> xflags::Result<Self> {
             Self::from_vec_(args)
         }
@@ -42,7 +41,7 @@ mod flags {
 }
 
 fn main() {
-    let flags = flags::MyCommand::from_env();
+    let flags = flags::MyCommand::from_env_or_exit();
     println!("{:#?}", flags);
 }
 ```
