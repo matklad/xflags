@@ -10,4 +10,4 @@ edition.workspace = true
 
 
 [dependencies]
-xflags-macros = { path = "../xflags-macros", version = "=0.3.0-pre.2" }
+xflags-macros = { path = "../xflags-macros", version = "=0.3.0" }
