@@ -108,9 +108,9 @@
 //! ```
 //! xflags::xflags! {
 //!     cmd switches {
-//!         optional -h, --help
-//!         repeated --verbose
+//!         optional -q,--quiet
 //!         required --pass-me
+//!         repeated --verbose
 //!     }
 //! }
 //! ```
@@ -239,8 +239,6 @@
 //!             optional config: PathBuf
 //!             /// Verbosity level, can be repeated multiple times.
 //!             repeated -v, --verbose
-//!             /// Print the help message.
-//!             optional -h, --help
 //!         }
 //!     }
 //! }
@@ -248,15 +246,9 @@
 //! fn main() {
 //!     match flags::Healthck::from_env() {
 //!         Ok(flags) => {
-//!             if flags.help {
-//!                 println!("{}", flags::Healthck::HELP);
-//!                 return;
-//!             }
 //!             run_checks(flags.config, flags.verbose);
 //!         }
-//!         Err(err) => {
-//!             eprintln!("{}", err);
-//!         }
+//!         Err(err) => err.exit()
 //!     }
 //! }
 //!
@@ -313,6 +305,7 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 #[derive(Debug)]
 pub struct Error {
     msg: String,
+    help: bool,
 }
 
 impl fmt::Display for Error {
@@ -328,7 +321,21 @@ impl Error {
     ///
     /// Use this to report custom validation errors.
     pub fn new(message: impl Into<String>) -> Error {
-        Error { msg: message.into() }
+        Error { msg: message.into(), help: false }
+    }
+
+    pub fn is_help(&self) -> bool {
+        self.help
+    }
+
+    pub fn exit(self) -> ! {
+        if self.is_help() {
+            println!("{self}");
+            std::process::exit(0)
+        } else {
+            eprintln!("{self}");
+            std::process::exit(2)
+        }
     }
 }
 
