@@ -301,6 +301,20 @@
 //! immediately parses the argument, exiting the process if needed.
 //! `parse_or_exit` only supports single top-level command and doesn't need the
 //! `cmd`  keyword.
+//!
+//! ## Limitations
+//!
+//! `xflags` follows
+//! [Fuchsia](https://fuchsia.dev/fuchsia-src/development/api/cli#command_line_arguments)
+//! conventions for command line arguments. GNU conventions such as grouping
+//! short-flags (`-xyz`) or gluing short flag and a value `(-fVAL)` are not
+//! supported.
+//!
+//! `xflags` requires the command line interface to be fully static. It's
+//! impossible to include additional flags at runtime.
+//!
+//! Implementation is not fully robust, there might be some residual bugs in
+//! edge cases.
 
 use std::fmt;
 
