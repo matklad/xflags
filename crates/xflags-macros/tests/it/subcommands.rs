@@ -41,7 +41,10 @@ pub struct AnalysisStats {
 }
 
 impl RustAnalyzer {
-    pub const HELP: &'static str = Self::HELP_;
+    #[allow(dead_code)]
+    pub fn from_env_or_exit() -> Self {
+        Self::from_env_or_exit_()
+    }
 
     #[allow(dead_code)]
     pub fn from_env() -> xflags::Result<Self> {
@@ -55,6 +58,9 @@ impl RustAnalyzer {
 }
 
 impl RustAnalyzer {
+    fn from_env_or_exit_() -> Self {
+        Self::from_env_().unwrap_or_else(|err| err.exit())
+    }
     fn from_env_() -> xflags::Result<Self> {
         let mut p = xflags::rt::Parser::new_from_env();
         Self::parse_(&mut p)
@@ -79,6 +85,7 @@ impl RustAnalyzer {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
                     (0 | 1 | 2 | 3 | 4, "--verbose" | "-v") => verbose.push(()),
+                    (0 | 1 | 2 | 3 | 4, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     (1 | 2 | 3, "--dir") => server__dir.push(p_.next_value(&flag_)?.into()),
                     (1, _) => {
                         p_.push_back(Ok(flag_));
@@ -140,6 +147,9 @@ rust-analyzer
 
 OPTIONS:
     -v, --verbose
+
+    -h, --help
+      Prints help information.
 
 SUBCOMMANDS:
 

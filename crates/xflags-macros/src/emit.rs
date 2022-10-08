@@ -36,7 +36,7 @@ pub(crate) fn emit(xflags: &ast::XFlags) -> String {
     emit_help(&mut buf, xflags);
 
     if xflags.is_anon() {
-        emit_parse_or_exit(&mut buf);
+        w!(buf, "Flags::from_env_or_exit()");
         w!(buf, "}}\n");
     }
 
@@ -46,7 +46,8 @@ pub(crate) fn emit(xflags: &ast::XFlags) -> String {
 fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
     w!(buf, "#[derive(Debug)]\n");
     w!(buf, "pub struct {}", cmd.ident());
-    if cmd.args.is_empty() && cmd.flags.is_empty() && cmd.subcommands.is_empty() {
+    let flags = cmd.flags.iter().filter(|it| !it.is_help()).collect::<Vec<_>>();
+    if cmd.args.is_empty() && flags.is_empty() && cmd.subcommands.is_empty() {
         w!(buf, ";\n");
         return;
     }
@@ -57,11 +58,11 @@ fn emit_cmd(buf: &mut String, cmd: &ast::Cmd) {
         w!(buf, "    pub {}: {ty},\n", arg.val.ident());
     }
 
-    if !cmd.args.is_empty() && !cmd.flags.is_empty() {
+    if !cmd.args.is_empty() && !flags.is_empty() {
         blank_line(buf);
     }
 
-    for flag in &cmd.flags {
+    for flag in &flags {
         let ty = gen_flag_ty(flag.arity, flag.val.as_ref().map(|it| &it.ty));
         w!(buf, "    pub {}: {ty},\n", flag.ident());
     }
@@ -115,7 +116,10 @@ fn gen_arg_ty(arity: ast::Arity, ty: &ast::Ty) -> String {
 fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "impl {} {{\n", xflags.cmd.ident());
 
-    w!(buf, "    pub const HELP: &'static str = Self::HELP_;\n");
+    w!(buf, "    #[allow(dead_code)]\n");
+    w!(buf, "    pub fn from_env_or_exit() -> Self {{\n");
+    w!(buf, "        Self::from_env_or_exit_()\n");
+    w!(buf, "    }}\n");
     blank_line(buf);
 
     w!(buf, "    #[allow(dead_code)]\n");
@@ -133,6 +137,9 @@ fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
 
 fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
     w!(buf, "impl {} {{\n", xflags.cmd.ident());
+    w!(buf, "    fn from_env_or_exit_() -> Self {{\n");
+    w!(buf, "        Self::from_env_().unwrap_or_else(|err| err.exit())\n");
+    w!(buf, "    }}\n");
     w!(buf, "    fn from_env_() -> xflags::Result<Self> {{\n");
     w!(buf, "        let mut p = xflags::rt::Parser::new_from_env();\n");
     w!(buf, "        Self::parse_(&mut p)\n");
@@ -182,7 +189,9 @@ fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
 
 fn emit_locals_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     for flag in &cmd.flags {
-        w!(buf, "let mut {prefix}{} = Vec::new();\n", flag.ident());
+        if !flag.is_help() {
+            w!(buf, "let mut {prefix}{} = Vec::new();\n", flag.ident());
+        }
     }
     for arg in &cmd.args {
         w!(buf, "let mut {prefix}{} = (false, Vec::new());\n", arg.val.ident());
@@ -202,19 +211,24 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         if let Some(short) = &flag.short {
             w!(buf, "| \"-{short}\"");
         }
-        w!(buf, ") => {prefix}{}.push(", flag.ident());
-        match &flag.val {
-            Some(val) => match &val.ty {
-                ast::Ty::OsString | ast::Ty::PathBuf => {
-                    w!(buf, "p_.next_value(&flag_)?.into()")
-                }
-                ast::Ty::FromStr(ty) => {
-                    w!(buf, "p_.next_value_from_str::<{ty}>(&flag_)?")
-                }
-            },
-            None => w!(buf, "()"),
+        w!(buf, ") => ");
+        if flag.is_help() {
+            w!(buf, "return Err(p_.help(Self::HELP_)),");
+        } else {
+            w!(buf, "{prefix}{}.push(", flag.ident());
+            match &flag.val {
+                Some(val) => match &val.ty {
+                    ast::Ty::OsString | ast::Ty::PathBuf => {
+                        w!(buf, "p_.next_value(&flag_)?.into()")
+                    }
+                    ast::Ty::FromStr(ty) => {
+                        w!(buf, "p_.next_value_from_str::<{ty}>(&flag_)?")
+                    }
+                },
+                None => w!(buf, "()"),
+            }
+            w!(buf, "),");
         }
-        w!(buf, "),");
     }
     if let Some(sub) = cmd.default_subcommand() {
         w!(buf, "({}, _) => {{ p_.push_back(Ok(flag_)); state_ = {}; }}", cmd.idx, sub.idx);
@@ -278,6 +292,9 @@ fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     w!(buf, "{} {{\n", cmd.ident());
 
     for flag in &cmd.flags {
+        if flag.is_help() {
+            continue;
+        }
         w!(buf, "{}: ", flag.ident());
         match &flag.val {
             Some(_val) => match flag.arity {
@@ -457,17 +474,6 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
             help_rec(buf, &prefix, sub);
         }
     }
-}
-
-fn emit_parse_or_exit(buf: &mut String) {
-    w!(
-        buf,
-        "match Flags::from_env() {{
-            Ok(flags) if flags.help => {{ println!(\"{{}}\", Flags::HELP); ::std::process::exit(0) }}
-            Ok(flags) => flags,
-            Err(err) => {{ eprintln!(\"{{}}\", err); ::std::process::exit(2) }}
-        }}"
-    )
 }
 
 impl ast::Cmd {

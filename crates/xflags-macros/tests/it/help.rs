@@ -21,7 +21,10 @@ pub struct Sub {
 }
 
 impl Helpful {
-    pub const HELP: &'static str = Self::HELP_;
+    #[allow(dead_code)]
+    pub fn from_env_or_exit() -> Self {
+        Self::from_env_or_exit_()
+    }
 
     #[allow(dead_code)]
     pub fn from_env() -> xflags::Result<Self> {
@@ -35,6 +38,9 @@ impl Helpful {
 }
 
 impl Helpful {
+    fn from_env_or_exit_() -> Self {
+        Self::from_env_().unwrap_or_else(|err| err.exit())
+    }
     fn from_env_() -> xflags::Result<Self> {
         let mut p = xflags::rt::Parser::new_from_env();
         Self::parse_(&mut p)
@@ -58,6 +64,7 @@ impl Helpful {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
                     (0 | 1, "--switch" | "-s") => switch.push(()),
+                    (0 | 1, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     (1, "--flag" | "-f") => sub__flag.push(()),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
@@ -112,6 +119,9 @@ ARGS:
 OPTIONS:
     -s, --switch
       And a switch.
+
+    -h, --help
+      Prints help information.
 
 SUBCOMMANDS:
 

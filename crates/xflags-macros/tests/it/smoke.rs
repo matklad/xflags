@@ -14,7 +14,10 @@ pub struct RustAnalyzer {
 }
 
 impl RustAnalyzer {
-    pub const HELP: &'static str = Self::HELP_;
+    #[allow(dead_code)]
+    pub fn from_env_or_exit() -> Self {
+        Self::from_env_or_exit_()
+    }
 
     #[allow(dead_code)]
     pub fn from_env() -> xflags::Result<Self> {
@@ -28,6 +31,9 @@ impl RustAnalyzer {
 }
 
 impl RustAnalyzer {
+    fn from_env_or_exit_() -> Self {
+        Self::from_env_().unwrap_or_else(|err| err.exit())
+    }
     fn from_env_() -> xflags::Result<Self> {
         let mut p = xflags::rt::Parser::new_from_env();
         Self::parse_(&mut p)
@@ -58,6 +64,7 @@ impl RustAnalyzer {
                     (0, "--number" | "-n") => number.push(p_.next_value_from_str::<u32>(&flag_)?),
                     (0, "--data") => data.push(p_.next_value(&flag_)?.into()),
                     (0, "--emoji") => emoji.push(()),
+                    (0, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
@@ -111,5 +118,8 @@ OPTIONS:
     --data <value>
 
     --emoji
+
+    -h, --help
+      Prints help information.
 ";
 }

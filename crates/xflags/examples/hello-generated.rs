@@ -25,8 +25,6 @@ mod flags {
     }
 
     impl Hello {
-        pub const HELP: &'static str = Self::HELP_;
-
         #[allow(dead_code)]
         pub fn from_env() -> xflags::Result<Self> {
             Self::from_env_()
@@ -46,9 +44,6 @@ fn main() {
             let bang = if flags.emoji { "❣️" } else { "!" };
             println!("Hello {}{}", flags.name, bang);
         }
-        Err(err) => {
-            eprintln!("{}\n\n{}", err, flags::Hello::HELP);
-            std::process::exit(1)
-        }
+        Err(err) => err.exit(),
     }
 }

@@ -4,7 +4,7 @@ use crate::{Error, Result};
 
 macro_rules! format_err {
     ($($tt:tt)*) => {
-        Error { msg: format!($($tt)*) }
+        Error { msg: format!($($tt)*), help: false }
     };
 }
 
@@ -96,6 +96,10 @@ impl Parser {
 
     pub fn subcommand_required(&self) -> Error {
         format_err!("subcommand is required")
+    }
+
+    pub fn help(&self, help: &'static str) -> Error {
+        Error { msg: help.to_string(), help: true }
     }
 
     pub fn optional<T>(&self, flag: &str, mut vals: Vec<T>) -> Result<Option<T>> {

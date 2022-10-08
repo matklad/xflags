@@ -37,6 +37,12 @@ pub(crate) struct Flag {
     pub(crate) val: Option<Val>,
 }
 
+impl Flag {
+    pub(crate) fn is_help(&self) -> bool {
+        self.name == "help"
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Arity {
     Optional,
