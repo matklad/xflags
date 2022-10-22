@@ -275,4 +275,28 @@ fn edge_cases() {
             }
         "#]],
     );
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "-- -v server",
+        expect![[r#"unexpected argument: "-v""#]],
+    );
+    check(repeated_pos::RepeatedPos::from_vec, "pos 1 prog -j", expect!["unexpected flag: `-j`"]);
+    check(
+        repeated_pos::RepeatedPos::from_vec,
+        "pos 1 -- prog -j",
+        expect![[r#"
+            RepeatedPos {
+                a: "pos",
+                b: Some(
+                    1,
+                ),
+                c: Some(
+                    "prog",
+                ),
+                rest: [
+                    "-j",
+                ],
+            }
+        "#]],
+    );
 }

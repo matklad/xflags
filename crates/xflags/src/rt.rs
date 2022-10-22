@@ -15,31 +15,38 @@ macro_rules! bail {
 }
 
 pub struct Parser {
+    after_double_dash: bool,
     rargs: Vec<OsString>,
 }
 
 impl Parser {
     pub fn new(mut args: Vec<OsString>) -> Self {
         args.reverse();
-        Self { rargs: args }
+        Self { after_double_dash: false, rargs: args }
     }
 
     pub fn new_from_env() -> Self {
-        let mut args = std::env::args_os().collect::<Vec<_>>();
-        args.reverse();
-        args.pop();
-        Self { rargs: args }
-    }
-
-    fn peek_flag(&self) -> Option<&str> {
-        self.rargs.last().and_then(|it| it.to_str()).filter(|it| it.starts_with('-'))
+        let args = std::env::args_os().collect::<Vec<_>>();
+        let mut res = Parser::new(args);
+        let _progn = res.next();
+        res
     }
 
     pub fn pop_flag(&mut self) -> Option<Result<String, OsString>> {
-        if self.peek_flag().is_some() {
-            self.next().map(|it| it.into_string())
-        } else {
+        if self.after_double_dash {
             self.next().map(Err)
+        } else {
+            let arg = self.next()?;
+            let arg_str = arg.to_str().unwrap_or_default();
+            if arg_str.starts_with('-') {
+                if arg_str == "--" {
+                    self.after_double_dash = true;
+                    return self.next().map(Err);
+                }
+                Some(arg.into_string())
+            } else {
+                Some(Err(arg))
+            }
         }
     }
 
