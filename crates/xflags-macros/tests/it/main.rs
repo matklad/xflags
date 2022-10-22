@@ -230,3 +230,49 @@ fn subcommand_flag_inheritance() {
         expect!["unexpected flag: `--dir`"],
     );
 }
+
+#[test]
+fn edge_cases() {
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "server --dir --log",
+        expect![[r#"
+            RustAnalyzer {
+                verbose: 0,
+                subcommand: Server(
+                    Server {
+                        dir: Some(
+                            "--log",
+                        ),
+                        subcommand: Launch(
+                            Launch {
+                                log: false,
+                            },
+                        ),
+                    },
+                ),
+            }
+        "#]],
+    );
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "server --dir -- --log",
+        expect![[r#"
+            RustAnalyzer {
+                verbose: 0,
+                subcommand: Server(
+                    Server {
+                        dir: Some(
+                            "--",
+                        ),
+                        subcommand: Launch(
+                            Launch {
+                                log: true,
+                            },
+                        ),
+                    },
+                ),
+            }
+        "#]],
+    );
+}
