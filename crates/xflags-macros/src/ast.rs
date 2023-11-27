@@ -13,6 +13,7 @@ impl XFlags {
 #[derive(Debug)]
 pub(crate) struct Cmd {
     pub(crate) name: String,
+    pub(crate) aliases: Vec<String>,
     pub(crate) doc: Option<String>,
     pub(crate) args: Vec<Arg>,
     pub(crate) flags: Vec<Flag>,
