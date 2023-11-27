@@ -13,12 +13,13 @@ impl XFlags {
 #[derive(Debug)]
 pub(crate) struct Cmd {
     pub(crate) name: String,
+    pub(crate) aliases: Vec<String>,
     pub(crate) doc: Option<String>,
     pub(crate) args: Vec<Arg>,
     pub(crate) flags: Vec<Flag>,
     pub(crate) subcommands: Vec<Cmd>,
     pub(crate) default: bool,
-    pub(crate) idx: u8,
+    pub(crate) idx: Vec<u8>,
 }
 
 #[derive(Debug)]

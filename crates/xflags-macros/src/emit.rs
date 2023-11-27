@@ -231,7 +231,9 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         }
     }
     if let Some(sub) = cmd.default_subcommand() {
-        w!(buf, "({}, _) => {{ p_.push_back(Ok(flag_)); state_ = {}; }}", cmd.idx, sub.idx);
+        let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        // accessing idx[0] is always valid, as it is the idx of the `sub.name` which is always present.
+        w!(buf, "({}, _) => {{ p_.push_back(Ok(flag_)); state_ = {}; }}", idx_match, sub.idx[0]);
     }
     for sub in &cmd.subcommands {
         let l = sub.push_prefix(prefix);
@@ -242,10 +244,15 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
 
 fn emit_match_arg_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     for sub in cmd.named_subcommands() {
-        w!(buf, "({}, \"{}\") => state_ = {},\n", cmd.idx, sub.name, sub.idx);
+        let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        let sub_match = sub.all_identifiers().map(|s| format!("\"{s}\"")).collect::<Vec<_>>().join(" | ");
+        // accessing idx[0] is always valid, as it is the idx of the `sub.name` which is always present.
+        w!(buf, "({}, {}) => state_ = {},\n", idx_match, sub_match, sub.idx[0]);
     }
+
     if !cmd.args.is_empty() || cmd.has_subcommands() {
-        w!(buf, "({}, _) => {{\n", cmd.idx);
+        let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        w!(buf, "({}, _) => {{\n", idx_match);
         for arg in &cmd.args {
             let done = match arg.arity {
                 ast::Arity::Optional | ast::Arity::Required => "done_ @ ",
@@ -273,7 +280,7 @@ fn emit_match_arg_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         }
 
         if let Some(sub) = cmd.default_subcommand() {
-            w!(buf, "p_.push_back(Err(arg_)); state_ = {};", sub.idx);
+            w!(buf, "p_.push_back(Err(arg_)); state_ = {};", sub.idx[0]);
         } else {
             w!(buf, "return Err(p_.unexpected_arg(arg_));");
         }
@@ -357,12 +364,14 @@ fn emit_leaf_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
             emit_leaf_ids_rec(buf, sub)
         }
     } else {
-        w!(buf, "| {}", cmd.idx)
+        let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        w!(buf, "| {}", idx_match)
     }
 }
 
 fn emit_all_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
-    w!(buf, "| {}", cmd.idx);
+    let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+    w!(buf, "| {}", idx_match);
     for sub in &cmd.subcommands {
         emit_all_ids_rec(buf, sub)
     }
@@ -370,7 +379,9 @@ fn emit_all_ids_rec(buf: &mut String, cmd: &ast::Cmd) {
 
 fn emit_default_transitions(buf: &mut String, cmd: &ast::Cmd) {
     if let Some(sub) = cmd.default_subcommand() {
-        w!(buf, "state_ = if state_ == {} {{ {} }} else {{ state_ }};", cmd.idx, sub.idx);
+        let idx_match = cmd.idx.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(" | ");
+        // accessing idx[0] is always valid, as it is the idx of the `sub.name` which is always present.
+        w!(buf, "state_ = if state_ == {} {{ {} }} else {{ state_ }};", idx_match, sub.idx[0]);
     }
     for sub in &cmd.subcommands {
         emit_default_transitions(buf, sub);
@@ -406,7 +417,8 @@ fn help_rec(buf: &mut String, prefix: &str, cmd: &ast::Cmd) {
     let mut empty_help = true;
     if !cmd.name.is_empty() {
         empty_help = false;
-        w!(buf, "{}{}\n", prefix, cmd.name);
+        let idens = cmd.all_identifiers().cloned().collect::<Vec<_>>().join(" | ");
+        w!(buf, "{}{}\n", prefix, idens);
     }
     if let Some(doc) = &cmd.doc {
         empty_help = false;
@@ -482,6 +494,9 @@ impl ast::Cmd {
             return "Flags".to_string();
         }
         camel(&self.name)
+    }
+    pub(crate) fn all_identifiers(&self) -> impl Iterator<Item = &String> {
+        [&self.name].into_iter().chain(self.aliases.iter())
     }
     fn cmd_enum_ident(&self) -> String {
         format!("{}Cmd", self.ident())
