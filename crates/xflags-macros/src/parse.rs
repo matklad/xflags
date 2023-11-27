@@ -82,11 +82,25 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
         cmd_name(p)?
     };
 
-    let idx = p.idx;
+    let aliases = if p.eat_keyword("alias") {
+        alias_names(p)?
+    } else {
+        vec![]
+    };
+
+    // add idx for main identifier
+    let mut idx = vec![p.idx];
     p.idx += 1;
+
+    // add idx for each alias
+    for _ in 0..aliases.len() {
+        idx.push(p.idx);
+        p.idx += 1;
+    }
 
     let mut res = ast::Cmd {
         name,
+        aliases,
         doc: None,
         args: Vec::new(),
         flags: Vec::new(),
@@ -104,6 +118,7 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
         if !anon && (default || p.at_keyword("cmd")) {
             let mut cmd = cmd(p)?;
             cmd.doc = doc;
+
             res.subcommands.push(cmd);
             if default {
                 if res.default {
@@ -135,6 +150,15 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
     if !anon {
         p.exit_delim()?;
     }
+
+    let mut unique_identifiers = std::collections::HashSet::new();
+    
+    for ident in res.subcommands.iter().map(|cmd| cmd.all_identifiers()).flatten() {
+        if !unique_identifiers.insert(ident) {
+            bail!("`{}` is defined multiple times", ident)
+        }
+    }
+
     Ok(res)
 }
 
@@ -240,6 +264,16 @@ fn cmd_name(p: &mut Parser) -> Result<String> {
         bail!("command name can't begin with `-`: `{name}`");
     }
     Ok(name)
+}
+
+fn alias_names(p: &mut Parser) -> Result<Vec<String>> {
+    let mut aliases = vec![p.expect_name()?];
+
+    while let Some(alias) = p.eat_name() {
+        aliases.push(alias);
+    }
+
+    Ok(aliases)
 }
 
 fn flag_name(p: &mut Parser) -> Result<String> {
