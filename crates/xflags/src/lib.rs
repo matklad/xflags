@@ -162,11 +162,12 @@
 //! }
 //! ```
 //!
-//! You can create aliases if desired. In this case, `run` can be called as `run`, `r` and `exec`:
+//! You can create aliases if desired, which is as simple as adding extra names to the `cmd` definition.
+//! In this case, `run` can be called as `run`, `r` and `exec`:
 //!
 //! ```rust
 //! xflags::xflags! {
-//!     cmd run alias r exec {}
+//!     cmd run r exec {}
 //! }
 //! ```
 //!
