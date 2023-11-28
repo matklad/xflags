@@ -144,7 +144,7 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
     }
 
     let mut unique_identifiers = std::collections::HashSet::new();
-    
+
     for ident in res.subcommands.iter().map(|cmd| cmd.all_identifiers()).flatten() {
         if !unique_identifiers.insert(ident) {
             bail!("`{}` is defined multiple times", ident)

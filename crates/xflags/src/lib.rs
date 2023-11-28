@@ -163,13 +163,13 @@
 //! ```
 //!
 //! You can create aliases if desired. In this case, `run` can be called as `run`, `r` and `exec`:
-//! 
+//!
 //! ```rust
 //! xflags::xflags! {
 //!     cmd run alias r exec {}
 //! }
 //! ```
-//! 
+//!
 //! Nesting **cmd** is allowed. `xflag` automatically generates boilerplate
 //! enums for subcommands:
 //!

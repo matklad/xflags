@@ -242,7 +242,8 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
 
 fn emit_match_arg_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
     for sub in cmd.named_subcommands() {
-        let sub_match = sub.all_identifiers().map(|s| format!("\"{s}\"")).collect::<Vec<_>>().join(" | ");
+        let sub_match =
+            sub.all_identifiers().map(|s| format!("\"{s}\"")).collect::<Vec<_>>().join(" | ");
         w!(buf, "({}, {}) => state_ = {},\n", cmd.idx, sub_match, sub.idx);
     }
     if !cmd.args.is_empty() || cmd.has_subcommands() {
