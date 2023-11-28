@@ -82,11 +82,7 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
         cmd_name(p)?
     };
 
-    let aliases = if p.eat_keyword("alias") {
-        alias_names(p)?
-    } else {
-        vec![]
-    };
+    let aliases = alias_names(p);
 
     let idx = p.idx;
     p.idx += 1;
@@ -258,14 +254,14 @@ fn cmd_name(p: &mut Parser) -> Result<String> {
     Ok(name)
 }
 
-fn alias_names(p: &mut Parser) -> Result<Vec<String>> {
-    let mut aliases = vec![p.expect_name()?];
+fn alias_names(p: &mut Parser) -> Vec<String> {
+    let mut aliases = vec![];
 
     while let Some(alias) = p.eat_name() {
         aliases.push(alias);
     }
 
-    Ok(aliases)
+    aliases
 }
 
 fn flag_name(p: &mut Parser) -> Result<String> {
