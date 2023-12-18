@@ -162,6 +162,15 @@
 //! }
 //! ```
 //!
+//! You can create aliases if desired, which is as simple as adding extra names to the `cmd` definition.
+//! In this case, `run` can be called as `run`, `r` and `exec`:
+//!
+//! ```rust
+//! xflags::xflags! {
+//!     cmd run r exec {}
+//! }
+//! ```
+//!
 //! Nesting **cmd** is allowed. `xflag` automatically generates boilerplate
 //! enums for subcommands:
 //!
