@@ -4,7 +4,12 @@
 
 -
 
-## 3.0.1
+## 0.3.2
+
+- Support command aliases.
+- Fix unused mut warning for empty commands.
+
+## 0.3.1
 
 - Better align with [fuchsia CLI spec](https://fuchsia.dev/fuchsia-src/development/api/cli#command_line_arguments):
 

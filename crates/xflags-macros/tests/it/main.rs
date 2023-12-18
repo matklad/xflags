@@ -1,5 +1,6 @@
-mod repeated_pos;
+mod empty;
 mod smoke;
+mod repeated_pos;
 mod subcommands;
 mod help;
 
@@ -22,6 +23,17 @@ where
             expect.assert_eq(&err.to_string());
         }
     }
+}
+
+#[test]
+fn empty() {
+    check(
+        empty::Empty::from_vec,
+        "",
+        expect![[r#"
+        Empty
+    "#]],
+    )
 }
 
 #[test]

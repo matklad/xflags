@@ -1,4 +1,4 @@
-#![allow(unused)]
+#[allow(unused)]
 use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
@@ -46,7 +46,7 @@ impl RustAnalyzer {
 
 impl RustAnalyzer {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
-        #![allow(non_snake_case)]
+        #![allow(non_snake_case, unused_mut)]
         let mut log_file = Vec::new();
         let mut verbose = Vec::new();
         let mut number = Vec::new();

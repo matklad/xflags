@@ -1,4 +1,4 @@
-#![allow(unused)]
+#[allow(unused)]
 use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ impl RepeatedPos {
 
 impl RepeatedPos {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
-        #![allow(non_snake_case)]
+        #![allow(non_snake_case, unused_mut)]
         let mut a = (false, Vec::new());
         let mut b = (false, Vec::new());
         let mut c = (false, Vec::new());

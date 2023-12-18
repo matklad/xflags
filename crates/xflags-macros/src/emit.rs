@@ -154,7 +154,7 @@ fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
 fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
     w!(buf, "impl {} {{\n", cmd.ident());
     w!(buf, "fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {{\n");
-    w!(buf, "#![allow(non_snake_case)]\n");
+    w!(buf, "#![allow(non_snake_case, unused_mut)]\n");
 
     let mut prefix = String::new();
     emit_locals_rec(buf, &mut prefix, cmd);
@@ -610,7 +610,7 @@ mod tests {
             let fmt = reformat(res.clone());
 
             let code = format!(
-                "#![allow(unused)]\nuse std::{{ffi::OsString, path::PathBuf}};\n\n{}",
+                "#[allow(unused)]\nuse std::{{ffi::OsString, path::PathBuf}};\n\n{}",
                 fmt.as_deref().unwrap_or(&res)
             );
 

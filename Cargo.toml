@@ -3,7 +3,7 @@ resolver = "2"
 members = ["xtask/", "crates/*"]
 
 [workspace.package]
-version = "0.3.1" # NB: update the dep!
+version = "0.3.2" # NB: update the dep!
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/matklad/xflags"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]

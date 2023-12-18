@@ -1,0 +1,4 @@
+xflags! {
+    cmd empty {
+    }
+}

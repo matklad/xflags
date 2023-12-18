@@ -8,6 +8,5 @@ repository.workspace = true
 authors.workspace = true
 edition.workspace = true
 
-
 [dependencies]
-xflags-macros = { path = "../xflags-macros", version = "=0.3.1" }
+xflags-macros = { path = "../xflags-macros", version = "=0.3.2" }

@@ -1,4 +1,4 @@
-#![allow(unused)]
+#[allow(unused)]
 use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ impl Helpful {
 
 impl Helpful {
     fn parse_(p_: &mut xflags::rt::Parser) -> xflags::Result<Self> {
-        #![allow(non_snake_case)]
+        #![allow(non_snake_case, unused_mut)]
         let mut switch = Vec::new();
         let mut src = (false, Vec::new());
         let mut extra = (false, Vec::new());
