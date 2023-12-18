@@ -3,9 +3,7 @@ use crate::{ast, update};
 use std::{env, fmt::Write, path::Path};
 
 macro_rules! w {
-    ($($tt:tt)*) => {
-        drop(write!($($tt)*))
-    };
+    ($($tt:tt)*) => {{ let _ = write!($($tt)*); }};
 }
 
 pub(crate) fn emit(xflags: &ast::XFlags) -> String {
