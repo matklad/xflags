@@ -17,8 +17,8 @@ fn main() {
     use std::os::unix::ffi::OsStringExt;
 
     let flags = flags::Cmd::from_vec(vec![
-        OsString::from_vec(vec![254].into()),
-        OsString::from_vec(vec![255].into()),
+        OsString::from_vec(vec![254]),
+        OsString::from_vec(vec![255]),
         "utf8".into(),
     ]);
 

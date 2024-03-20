@@ -133,7 +133,7 @@ fn emit_api(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "}}\n");
 }
 
-fn emit_impls(buf: &mut String, xflags: &ast::XFlags) -> () {
+fn emit_impls(buf: &mut String, xflags: &ast::XFlags) {
     w!(buf, "impl {} {{\n", xflags.cmd.ident());
     w!(buf, "    fn from_env_or_exit_() -> Self {{\n");
     w!(buf, "        Self::from_env_().unwrap_or_else(|err| err.exit())\n");
@@ -160,7 +160,14 @@ fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
     emit_locals_rec(buf, &mut prefix, cmd);
     blank_line(buf);
     w!(buf, "let mut state_ = 0u8;\n");
-    w!(buf, "while let Some(arg_) = p_.pop_flag() {{\n");
+
+    // // No while loop needed for command with no items (clippy::never_loop)
+    // if cmd.args.len() + cmd.flags.len() + cmd.subcommands.len() <= 1 {
+    //     w!(buf, "if let Some(arg_) = p_.pop_flag() {{\n");
+    // } else {
+        w!(buf, "while let Some(arg_) = p_.pop_flag() {{\n");
+    // }
+
     w!(buf, "match arg_ {{\n");
     {
         w!(buf, "Ok(flag_) => match (state_, flag_.as_str()) {{\n");
@@ -386,7 +393,7 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
         buf
     };
     let help = format!("{:?}", help);
-    let help = help.replace("\\n", "\n").replacen("\"", "\"\\\n", 1);
+    let help = help.replace("\\n", "\n").replacen('\"', "\"\\\n", 1);
 
     w!(buf, "const HELP_: &'static str = {help};");
     w!(buf, "}}\n");
