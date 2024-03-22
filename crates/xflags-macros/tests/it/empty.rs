@@ -40,13 +40,14 @@ impl Empty {
         #![allow(non_snake_case, unused_mut)]
 
         let mut state_ = 0u8;
-        while let Some(arg_) = p_.pop_flag() {
+        if let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
                     (0, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
+                    (0, "help") => return Err(p_.help(Self::HELP_)),
                     _ => return Err(p_.unexpected_arg(arg_)),
                 },
             }
@@ -55,11 +56,10 @@ impl Empty {
     }
 }
 impl Empty {
-    const HELP_: &'static str = "\
-empty
+    const HELP_: &'static str = "Usage: empty [-h]
+Options:
+  -h, --help           Prints help
 
-OPTIONS:
-    -h, --help
-      Prints help information.
-";
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
 }
