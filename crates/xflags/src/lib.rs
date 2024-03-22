@@ -375,6 +375,12 @@ impl Error {
             std::process::exit(2)
         }
     }
+
+    /// Appends to the contained message
+    pub fn chain(mut self, msg: &str) -> Self {
+        self.msg.push_str(msg);
+        self
+    }
 }
 
 /// Private impl details for macros.
