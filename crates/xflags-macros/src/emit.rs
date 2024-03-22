@@ -209,8 +209,13 @@ fn emit_locals_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
 }
 
 fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
-    w!(buf, "({}, \"--help\" | \"-h\") => return Err(p_.help(Self::HELP_{})),\n", cmd.idx, snake(prefix).to_uppercase());
-    for flag in &cmd.flags {
+    w!(
+        buf,
+        "({}, \"--help\" | \"-h\") => return Err(p_.help(Self::HELP_{})),\n",
+        cmd.idx,
+        snake(prefix).to_uppercase()
+    );
+    for flag in cmd.flags.iter().filter(|f| !f.is_help()) {
         w!(buf, "(");
         emit_all_ids_rec(buf, cmd);
         w!(buf, ", \"--{}\"", flag.name);
@@ -218,24 +223,19 @@ fn emit_match_flag_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
             w!(buf, "| \"-{short}\"");
         }
         w!(buf, ") => ");
-        if flag.is_help() {
-            println!("help, prefix: {}", snake(prefix).to_uppercase());
-            w!(buf, "return Err(p_.help(Self::HELP_{})),\n", snake(prefix).to_uppercase());
-        } else {
-            w!(buf, "{prefix}{}.push(", flag.ident());
-            match &flag.val {
-                Some(val) => match &val.ty {
-                    ast::Ty::OsString | ast::Ty::PathBuf => {
-                        w!(buf, "p_.next_value(&flag_)?.into()")
-                    }
-                    ast::Ty::FromStr(ty) => {
-                        w!(buf, "p_.next_value_from_str::<{ty}>(&flag_)?")
-                    }
-                },
-                None => w!(buf, "()"),
-            }
-            w!(buf, "),\n");
+        w!(buf, "{prefix}{}.push(", flag.ident());
+        match &flag.val {
+            Some(val) => match &val.ty {
+                ast::Ty::OsString | ast::Ty::PathBuf => {
+                    w!(buf, "p_.next_value(&flag_)?.into()")
+                }
+                ast::Ty::FromStr(ty) => {
+                    w!(buf, "p_.next_value_from_str::<{ty}>(&flag_)?")
+                }
+            },
+            None => w!(buf, "()"),
         }
+        w!(buf, "),\n");
     }
     if let Some(sub) = cmd.default_subcommand() {
         w!(buf, "({}, _) => {{ p_.push_back(Ok(flag_)); state_ = {}; }}", cmd.idx, sub.idx);
