@@ -406,51 +406,60 @@ fn emit_help(buf: &mut String, xflags: &ast::XFlags) {
 }
 
 fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
-    let mut help = String::new();
-    w!(help, "Usage: {}", cmd.name);
+    let mut help_buf = String::new();
+    w!(help_buf, "Usage: {}", cmd.name);
     for arg in cmd.args_with_default() {
         let (l, r) = arg.arity.brackets();
-        w!(help, " {l}{}{r}", arg.val.name);
+        w!(help_buf, " {l}{}{r}", arg.val.name);
     }
     for flag in cmd.flags_with_default() {
-        let (l, r) = flag.arity.brackets();
-        w!(help, " {l}-{}{r}", flag.short.clone().unwrap_or_else(|| format!("-{}", flag.name)))
+        // <-f> doesn't make sense, if it has to be included it should just be -f
+        let (l, r) = match flag.arity {
+            ast::Arity::Required => ("", ""),
+            _ => flag.arity.brackets(),
+        };
+        let f = flag.short.clone().unwrap_or_else(|| format!("-{}", flag.name));
+
+        match &flag.val {
+            Some(v) => w!(help_buf, " {l}-{f} <{}>{r}", v.name),
+            None => w!(help_buf, " {l}-{f}{r}"),
+        }
+    }
+    if cmd.has_subcommands() {
+        w!(help_buf, " <COMMAND>")
     }
     if let Some(doc) = &cmd.doc {
-        w!(help, "\n\n{}\n", doc);
+        w!(help_buf, "\n\n{}\n", doc);
     }
     if !cmd.args_with_default().is_empty() {
-        w!(help, "\nArguments:\n");
+        w!(help_buf, "\nArguments:\n");
         for arg in cmd.args_with_default() {
             let (l, r) = arg.arity.brackets();
             let pre_doc = format!("{l}{}{r}", arg.val.name);
-            w!(help, "  {:<17} {}\n", pre_doc, arg.doc.as_deref().unwrap_or(""));
+            w!(help_buf, "  {:<20} {}\n", pre_doc, arg.doc.as_deref().unwrap_or(""));
         }
     }
     if !cmd.flags_with_default().is_empty() {
-        w!(help, "\nOptions:\n");
+        w!(help_buf, "\nOptions:\n");
         for flag in cmd.flags_with_default() {
             let short = flag.short.as_ref().map(|it| format!("-{it}, ")).unwrap_or_default();
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
             let pre_doc = format!("{short}--{}{value}", flag.name);
             
-            w!(help, "  {:<17} {}\n", pre_doc, flag.doc.as_deref().unwrap_or(""));
+            w!(help_buf, "  {:<20} {}\n", pre_doc, flag.doc.as_deref().unwrap_or(""));
         }
     }
-    if cmd.has_subcommands() {
-        w!(help, "\nCommands:");
-        for subcommand in &cmd.subcommands {
-            w!(help, "\n  {:<17} ", subcommand.name);
-            w!(help, "{}", subcommand.doc.as_deref().unwrap_or(""));
+    w!(help_buf, "\nCommands:");
+    for subcommand in &cmd.subcommands {
+        w!(help_buf, "\n  {:<20} {}", subcommand.name, subcommand.doc.as_deref().unwrap_or(""));
 
-            let prefix = format!("{}{}__", prefix, subcommand.name);
-            cmd_help_rec(buf, subcommand, &prefix);
-        }
+        let prefix = format!("{}{}__", prefix, subcommand.name);
+        cmd_help_rec(buf, subcommand, &prefix);
     }
+    w!(help_buf, "\n  {:<20} ", "help");
+    w!(help_buf, "Print this message or the help of the given subcommand(s)");
 
-    // w!(help, "Notes:\n  Use `help <command>` for details on [<args>] for a subcommand.");
-
-    w!(buf, "const HELP_{}: &'static str = \"{help}\";\n", snake(prefix).to_uppercase());
+    w!(buf, "const HELP_{}: &'static str = \"{help_buf}\";\n", snake(prefix).to_uppercase());
 }
 
 impl ast::Cmd {
