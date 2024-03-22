@@ -34,7 +34,7 @@ fn main() -> xshell::Result<()> {
 
         let current_branch = cmd!(sh, "git branch --show-current").read()?;
         let tag_exists =
-            cmd!(sh, "git tag --list").read()?.split_ascii_whitespace().any(|it| it == &tag);
+            cmd!(sh, "git tag --list").read()?.split_ascii_whitespace().any(|it| it == tag);
 
         if current_branch == "master" && !tag_exists {
             cmd!(sh, "git tag v{version}").run()?;

@@ -63,10 +63,11 @@ impl Helpful {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
+                    (0, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     (0 | 1, "--switch" | "-s") => switch.push(()),
-                    (0 | 1, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
+                    (1, "--help" | "-h") => return Err(p_.help(Self::HELP_SUB__)),
                     (1, "--flag" | "-f") => sub__flag.push(()),
-                    _ => return Err(p_.unexpected_flag(&flag_)),
+                    _ => return Err(p_.unexpected_flag(&flag_).chain("\n\n").chain(Self::HELP_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "sub") => state_ = 1,
@@ -81,9 +82,10 @@ impl Helpful {
                             *done_ = true;
                             continue;
                         }
-                        return Err(p_.unexpected_arg(arg_));
+                        return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_));
                     }
-                    _ => return Err(p_.unexpected_arg(arg_)),
+                    (1, "help") => return Err(p_.help(Self::HELP_SUB__)),
+                    _ => return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_)),
                 },
             }
         }
@@ -93,44 +95,41 @@ impl Helpful {
             extra: p_.optional("extra", extra.1)?,
             subcommand: match state_ {
                 1 => HelpfulCmd::Sub(Sub { flag: p_.optional("--flag", sub__flag)?.is_some() }),
-                _ => return Err(p_.subcommand_required()),
+                _ => return Err(p_.subcommand_required().chain("\n\n").chain(Self::HELP_)),
             },
         })
     }
 }
 impl Helpful {
-    const HELP_: &'static str = "\
-helpful
-  Does stuff
+    const HELP_SUB__: &'static str = "Usage: sub [-f]
 
-  Helpful stuff.
+And even a subcommand!
 
-ARGS:
-    [src]
-      With an arg.
+Options:
+  -f, --flag           With an optional flag. This has a really long
+description which spans multiple lines.
 
-    [extra]
-      Another arg.
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_: &'static str = "Usage: helpful [src] [extra] -s [-h] <COMMAND>
 
-      This time, we provide some extra info about the
-      arg. Maybe some caveats, or what kinds of
-      values are accepted.
+Does stuff
 
-OPTIONS:
-    -s, --switch
-      And a switch.
+Helpful stuff.
 
-    -h, --help
-      Prints help information.
+Arguments:
+  [src]                With an arg.
+  [extra]              Another arg.
 
-SUBCOMMANDS:
+This time, we provide some extra info about the
+arg. Maybe some caveats, or what kinds of
+values are accepted.
 
-helpful sub
-  And even a subcommand!
+Options:
+  -s, --switch         And a switch.
+  -h, --help           Prints help
 
-  OPTIONS:
-    -f, --flag
-      With an optional flag. This has a really long
-      description which spans multiple lines.
-";
+Commands:
+  sub                  And even a subcommand!
+  help                 Print this message or the help of the given subcommand(s)";
 }
