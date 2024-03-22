@@ -97,14 +97,14 @@ impl RustAnalyzer {
                     (3, "--help" | "-h") => return Err(p_.help(Self::HELP_SERVER__WATCH__)),
                     (4, "--help" | "-h") => return Err(p_.help(Self::HELP_ANALYSIS_STATS__)),
                     (4, "--parallel") => analysis_stats__parallel.push(()),
-                    _ => return Err(p_.unexpected_flag(&flag_)),
+                    _ => return Err(p_.unexpected_flag(&flag_).chain("\n\n").chain(Self::HELP_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "server") => state_ = 1,
                     (0, "analysis-stats") => state_ = 4,
                     (0, "help") => return Err(p_.help(Self::HELP_)),
                     (0, _) => {
-                        return Err(p_.unexpected_arg(arg_));
+                        return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_));
                     }
                     (1, "watch") => state_ = 3,
                     (1, "help") => return Err(p_.help(Self::HELP_SERVER__)),
@@ -120,9 +120,12 @@ impl RustAnalyzer {
                             *done_ = true;
                             continue;
                         }
-                        return Err(p_.unexpected_arg(arg_));
+                        return Err(p_
+                            .unexpected_arg(arg_)
+                            .chain("\n\n")
+                            .chain(Self::HELP_ANALYSIS_STATS__));
                     }
-                    _ => return Err(p_.unexpected_arg(arg_)),
+                    _ => return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_)),
                 },
             }
         }
@@ -137,14 +140,19 @@ impl RustAnalyzer {
                             log: p_.optional("--log", server__launch__log)?.is_some(),
                         }),
                         3 => ServerCmd::Watch(Watch {}),
-                        _ => return Err(p_.subcommand_required()),
+                        _ => {
+                            return Err(p_
+                                .subcommand_required()
+                                .chain("\n\n")
+                                .chain(Self::HELP_SERVER__))
+                        }
                     },
                 }),
                 4 => RustAnalyzerCmd::AnalysisStats(AnalysisStats {
                     parallel: p_.optional("--parallel", analysis_stats__parallel)?.is_some(),
                     path: p_.required("path", analysis_stats__path.1)?,
                 }),
-                _ => return Err(p_.subcommand_required()),
+                _ => return Err(p_.subcommand_required().chain("\n\n").chain(Self::HELP_)),
             },
         })
     }

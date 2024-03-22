@@ -66,18 +66,18 @@ impl AliasCmd {
                         sub__count.push(p_.next_value_from_str::<usize>(&flag_)?)
                     }
                     (2, "--help" | "-h") => return Err(p_.help(Self::HELP_THIS__)),
-                    _ => return Err(p_.unexpected_flag(&flag_)),
+                    _ => return Err(p_.unexpected_flag(&flag_).chain("\n\n").chain(Self::HELP_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "sub" | "s") => state_ = 1,
                     (0, "this" | "one" | "has" | "a" | "lot" | "of" | "aliases") => state_ = 2,
                     (0, "help") => return Err(p_.help(Self::HELP_)),
                     (0, _) => {
-                        return Err(p_.unexpected_arg(arg_));
+                        return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_));
                     }
                     (1, "help") => return Err(p_.help(Self::HELP_SUB__)),
                     (2, "help") => return Err(p_.help(Self::HELP_THIS__)),
-                    _ => return Err(p_.unexpected_arg(arg_)),
+                    _ => return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_)),
                 },
             }
         }
@@ -85,7 +85,7 @@ impl AliasCmd {
             subcommand: match state_ {
                 1 => AliasCmdCmd::Sub(Sub { count: p_.optional("--count", sub__count)? }),
                 2 => AliasCmdCmd::This(This {}),
-                _ => return Err(p_.subcommand_required()),
+                _ => return Err(p_.subcommand_required().chain("\n\n").chain(Self::HELP_)),
             },
         })
     }
