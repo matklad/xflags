@@ -161,12 +161,12 @@ fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
     blank_line(buf);
     w!(buf, "let mut state_ = 0u8;\n");
 
-    // // No while loop needed for command with no items (clippy::never_loop)
-    // if cmd.args.len() + cmd.flags.len() + cmd.subcommands.len() <= 1 {
-    //     w!(buf, "if let Some(arg_) = p_.pop_flag() {{\n");
-    // } else {
+    // No while loop needed for command with no items (clippy::never_loop)
+    if cmd.args.len() + cmd.flags.len() + cmd.subcommands.len() <= 1 {
+        w!(buf, "if let Some(arg_) = p_.pop_flag() {{\n");
+    } else {
         w!(buf, "while let Some(arg_) = p_.pop_flag() {{\n");
-    // }
+    }
 
     w!(buf, "match arg_ {{\n");
     {
