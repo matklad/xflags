@@ -445,20 +445,17 @@ fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
             let short = flag.short.as_ref().map(|it| format!("-{it}, ")).unwrap_or_default();
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
             let pre_doc = format!("{short}--{}{value}", flag.name);
-            
             w!(help_buf, "  {:<20} {}\n", pre_doc, flag.doc.as_deref().unwrap_or(""));
         }
     }
     w!(help_buf, "\nCommands:");
     for subcommand in &cmd.subcommands {
         w!(help_buf, "\n  {:<20} {}", subcommand.name, subcommand.doc.as_deref().unwrap_or(""));
-
         let prefix = format!("{}{}__", prefix, subcommand.name);
         cmd_help_rec(buf, subcommand, &prefix);
     }
     w!(help_buf, "\n  {:<20} ", "help");
     w!(help_buf, "Print this message or the help of the given subcommand(s)");
-
     w!(buf, "const HELP_{}: &'static str = \"{help_buf}\";\n", snake(prefix).to_uppercase());
 }
 
