@@ -47,7 +47,7 @@ fn add_help(cmd: &mut ast::Cmd) {
         arity: ast::Arity::Optional,
         name: "help".to_string(),
         short: Some("h".to_string()),
-        doc: Some("Prints help information.".to_string()),
+        doc: Some("Prints help".to_string()),
         val: None,
     };
     cmd.flags.push(help);
