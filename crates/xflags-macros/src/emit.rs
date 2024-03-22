@@ -504,7 +504,7 @@ impl ast::Arity {
         match self {
             ast::Arity::Optional => ("[", "]"),
             ast::Arity::Required => ("<", ">"),
-            ast::Arity::Repeated => ("<", ">..."),
+            ast::Arity::Repeated => ("[", "]..."),
         }
     }
 }
