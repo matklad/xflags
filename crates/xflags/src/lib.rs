@@ -44,16 +44,16 @@
 //! help:
 //!
 //! ```text
-//! ARGS:
-//!     <path>
-//!       File or directory to remove
+//! Usage:  <path> [-r] [-h]
+//! Arguments:
+//!   <path>               File or directory to remove
 //!
-//! OPTIONS:
-//!     -r, --recursive
-//!       Remove directories and their contents recursively.
+//! Options:
+//!   -r, --recursive      Remove directories and their contents recursively.
+//!   -h, --help           Prints help
 //!
-//!     -h, --help
-//!       Prints help information.
+//! Commands:
+//!   help                 Print this message or the help of the given subcommand(s)
 //! ```
 //!
 //! For larger programs, you'd typically want to use `xflags!` macro, which
