@@ -444,28 +444,14 @@ fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
     }
     if !cmd.args_with_default().is_empty() {
         w!(help_buf, "\nArguments:\n");
-        // let offset =
-        //     cmd.args_with_default().into_iter().map(|a| a.val.name.len() + 4).max().unwrap_or(2);
         for arg in cmd.args_with_default() {
             let (l, r) = arg.arity.brackets();
             let pre_doc = format!("{l}{}{r}", arg.val.name);
-            // w_arg(&mut help_buf, offset, &pre_doc);
             w!(help_buf, "  {:<20} {}\n", pre_doc, arg.doc.as_deref().unwrap_or(""));
         }
     }
     if !cmd.flags_with_default().is_empty() {
         w!(help_buf, "\nOptions:\n");
-        // let offset = cmd
-        //     .flags_with_default()
-        //     .into_iter()
-        //     .map(|flag| {
-        //         flag.short.as_ref().map(|s| s.len() + 3).unwrap_or(0)
-        //             + flag.val.as_ref().map(|v| v.name.len() + 3).unwrap_or(0)
-        //             + flag.name.len()
-        //             + 6
-        //     })
-        //     .max()
-        //     .unwrap_or(6);
         for flag in cmd.flags_with_default() {
             let short = flag.short.as_ref().map(|it| format!("-{it}, ")).unwrap_or_default();
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
@@ -483,13 +469,6 @@ fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
     w!(help_buf, "Print this message or the help of the given subcommand(s)");
     w!(buf, "const HELP_{}: &'static str = \"{help_buf}\";\n", snake(prefix).to_uppercase());
 }
-
-// fn w_arg(buf: &mut String, n: usize, msg: &str) {
-//     w!(buf, "  {msg}");
-//     for _ in 0..(n.saturating_sub(msg.chars().count() + 2)) {
-//         buf.push(' ')
-//     }
-// }
 
 impl ast::Cmd {
     fn ident(&self) -> String {
