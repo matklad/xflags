@@ -65,7 +65,7 @@ impl RustAnalyzer {
                     (0, "--number" | "-n") => number.push(p_.next_value_from_str::<u32>(&flag_)?),
                     (0, "--data") => data.push(p_.next_value(&flag_)?.into()),
                     (0, "--emoji") => emoji.push(()),
-                    _ => return Err(p_.unexpected_flag(&flag_).chain("\n\n").chain(Self::HELP_)),
+                    _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, _) => {
@@ -79,9 +79,9 @@ impl RustAnalyzer {
                             *done_ = true;
                             continue;
                         }
-                        return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_));
+                        return Err(p_.unexpected_arg(arg_));
                     }
-                    _ => return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_)),
+                    _ => return Err(p_.unexpected_arg(arg_)),
                 },
             }
         }

@@ -67,7 +67,7 @@ impl Helpful {
                     (0 | 1, "--switch" | "-s") => switch.push(()),
                     (1, "--help" | "-h") => return Err(p_.help(Self::HELP_SUB__)),
                     (1, "--flag" | "-f") => sub__flag.push(()),
-                    _ => return Err(p_.unexpected_flag(&flag_).chain("\n\n").chain(Self::HELP_)),
+                    _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "sub") => state_ = 1,
@@ -82,10 +82,10 @@ impl Helpful {
                             *done_ = true;
                             continue;
                         }
-                        return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_));
+                        return Err(p_.unexpected_arg(arg_));
                     }
                     (1, "help") => return Err(p_.help(Self::HELP_SUB__)),
-                    _ => return Err(p_.unexpected_arg(arg_).chain("\n\n").chain(Self::HELP_)),
+                    _ => return Err(p_.unexpected_arg(arg_)),
                 },
             }
         }
@@ -95,7 +95,7 @@ impl Helpful {
             extra: p_.optional("extra", extra.1)?,
             subcommand: match state_ {
                 1 => HelpfulCmd::Sub(Sub { flag: p_.optional("--flag", sub__flag)?.is_some() }),
-                _ => return Err(p_.subcommand_required().chain("\n\n").chain(Self::HELP_)),
+                _ => return Err(p_.subcommand_required()),
             },
         })
     }

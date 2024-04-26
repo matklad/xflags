@@ -77,71 +77,43 @@ fn smoke() {
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 92 --werbose",
-        expect![[r#"
-            unexpected flag: `--werbose`
-
-            Usage: rust-analyzer <workspace> [jobs] [--log-file <path>] [-v]... -n <n> [--data <value>]... [--emoji] [-h]
-
-            LSP server for rust.
-
-            Arguments:
-              <workspace>          
-              [jobs]               Number of concurrent jobs.
-
-            Options:
-              --log-file <path>    Path to log file. By default, logs go to stderr.
-              -v, --verbose        
-              -n, --number <n>     
-              --data <value>       
-              --emoji              
-              -h, --help           Prints help
-
-            Commands:
-              help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown flag: `--werbose`. Use `help` for more information"],
     );
-    check(smoke::RustAnalyzer::from_vec, "", expect!["flag is required: `--number`"]);
-    check(smoke::RustAnalyzer::from_vec, ".", expect![[r#"flag is required: `--number`"#]]);
+    check(
+        smoke::RustAnalyzer::from_vec,
+        "",
+        expect!["Flag is required: `--number`. Use `help` for more information"],
+    );
+    check(
+        smoke::RustAnalyzer::from_vec,
+        ".",
+        expect!["Flag is required: `--number`. Use `help` for more information"],
+    );
     check(smoke::RustAnalyzer::from_vec, "-n", expect![[r#"expected a value for `-n`"#]]);
-    check(smoke::RustAnalyzer::from_vec, "-n 92", expect!["flag is required: `workspace`"]);
+    check(
+        smoke::RustAnalyzer::from_vec,
+        "-n 92",
+        expect!["Flag is required: `workspace`. Use `help` for more information"],
+    );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n lol",
-        expect![[r#"can't parse `-n`, invalid digit found in string"#]],
+        expect!["Can't parse `-n`, invalid digit found in string"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 -n 2 .",
-        expect![[r#"flag specified more than once: `--number`"#]],
+        expect!["Flag specified more than once: `--number`"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 . 92 lol",
-        expect![[r#"
-            unexpected argument: "lol"
-
-            Usage: rust-analyzer <workspace> [jobs] [--log-file <path>] [-v]... -n <n> [--data <value>]... [--emoji] [-h]
-
-            LSP server for rust.
-
-            Arguments:
-              <workspace>          
-              [jobs]               Number of concurrent jobs.
-
-            Options:
-              --log-file <path>    Path to log file. By default, logs go to stderr.
-              -v, --verbose        
-              -n, --number <n>     
-              --data <value>       
-              --emoji              
-              -h, --help           Prints help
-
-            Commands:
-              help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown command: `lol`. Use `help` for more information"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 . --emoji --emoji",
-        expect![[r#"flag specified more than once: `--emoji`"#]],
+        expect!["Flag specified more than once: `--emoji`"],
     );
 }
 
@@ -250,18 +222,7 @@ fn subcommands() {
     check(
         subcommands::RustAnalyzer::from_vec,
         "",
-        expect![[r#"
-        subcommand is required
-
-        Usage: rust-analyzer [-v]... [-h] <COMMAND>
-        Options:
-          -v, --verbose        
-          -h, --help           Prints help
-
-        Commands:
-          server               
-          analysis-stats       
-          help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["A subcommand is required. Use `help` for more information"],
     );
 }
 
@@ -289,34 +250,12 @@ fn subcommand_flag_inheritance() {
     check(
         subcommands::RustAnalyzer::from_vec,
         "analysis-stats --verbose --dir .",
-        expect![[r#"
-            unexpected flag: `--dir`
-
-            Usage: rust-analyzer [-v]... [-h] <COMMAND>
-            Options:
-              -v, --verbose        
-              -h, --help           Prints help
-
-            Commands:
-              server               
-              analysis-stats       
-              help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown flag: `--dir`. Use `help` for more information"],
     );
     check(
         subcommands::RustAnalyzer::from_vec,
         "--dir . server",
-        expect![[r#"
-            unexpected flag: `--dir`
-
-            Usage: rust-analyzer [-v]... [-h] <COMMAND>
-            Options:
-              -v, --verbose        
-              -h, --help           Prints help
-
-            Commands:
-              server               
-              analysis-stats       
-              help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown flag: `--dir`. Use `help` for more information"],
     );
 }
 
@@ -367,37 +306,12 @@ fn edge_cases() {
     check(
         subcommands::RustAnalyzer::from_vec,
         "-- -v server",
-        expect![[r#"
-            unexpected argument: "-v"
-
-            Usage: rust-analyzer [-v]... [-h] <COMMAND>
-            Options:
-              -v, --verbose        
-              -h, --help           Prints help
-
-            Commands:
-              server               
-              analysis-stats       
-              help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown command: `-v`. Use `help` for more information"],
     );
     check(
         repeated_pos::RepeatedPos::from_vec,
         "pos 1 prog -j",
-        expect![[r#"
-        unexpected flag: `-j`
-
-        Usage: RepeatedPos <a> [b] [c] [rest]... [-h]
-        Arguments:
-          <a>                  
-          [b]                  
-          [c]                  
-          [rest]...            
-
-        Options:
-          -h, --help           Prints help
-
-        Commands:
-          help                 Print this message or the help of the given subcommand(s)"#]],
+        expect!["Unknown flag: `-j`. Use `help` for more information"],
     );
     check(
         repeated_pos::RepeatedPos::from_vec,
