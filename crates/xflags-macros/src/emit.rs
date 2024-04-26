@@ -172,15 +172,12 @@ fn emit_parse(buf: &mut String, cmd: &ast::Cmd) {
     {
         w!(buf, "Ok(flag_) => match (state_, flag_.as_str()) {{\n");
         emit_match_flag_rec(buf, &mut prefix, cmd);
-        w!(
-            buf,
-            "_ => return Err(p_.unexpected_flag(&flag_).chain(\"\\n\\n\").chain(Self::HELP_)),\n"
-        );
+        w!(buf, "_ => return Err(p_.unexpected_flag(&flag_)),\n");
         w!(buf, "}}\n");
 
         w!(buf, "Err(arg_) => match (state_, arg_.to_str().unwrap_or(\"\")) {{\n");
         emit_match_arg_rec(buf, &mut prefix, cmd);
-        w!(buf, "_ => return Err(p_.unexpected_arg(arg_).chain(\"\\n\\n\").chain(Self::HELP_)),\n");
+        w!(buf, "_ => return Err(p_.unexpected_arg(arg_)),\n");
         w!(buf, "}}\n");
     }
     w!(buf, "}}\n");
@@ -298,11 +295,7 @@ fn emit_match_arg_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
         if let Some(sub) = cmd.default_subcommand() {
             w!(buf, "p_.push_back(Err(arg_)); state_ = {};", sub.idx);
         } else {
-            w!(
-                buf,
-                "return Err(p_.unexpected_arg(arg_).chain(\"\\n\\n\").chain(Self::HELP_{}));",
-                snake(prefix).to_uppercase()
-            );
+            w!(buf, "return Err(p_.unexpected_arg(arg_));");
         }
 
         w!(buf, "}}\n");
@@ -371,11 +364,7 @@ fn emit_record_rec(buf: &mut String, prefix: &mut String, cmd: &ast::Cmd) {
             prefix.truncate(l);
             w!(buf, "),\n");
         }
-        w!(
-            buf,
-            "_ => return Err(p_.subcommand_required().chain(\"\\n\\n\").chain(Self::HELP_{}))",
-            snake(prefix).to_uppercase()
-        );
+        w!(buf, "_ => return Err(p_.subcommand_required())");
         w!(buf, "}}\n");
     }
 
