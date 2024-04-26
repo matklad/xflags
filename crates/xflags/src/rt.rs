@@ -21,17 +21,14 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(mut args: Vec<OsString>) -> Self {
-        args.reverse();
-
-        // parse `help` command last when encountered first to be able to do `help <commands>` without creating
-        // a bunch of leafs in the parse tree for it
-        match args.pop() {
-            Some(arg) => match arg.to_str().unwrap_or("") {
-                "help" => args.insert(0, "--help".into()),
-                _ => args.push(arg),
-            },
-            _ => {}
+        // parse `help` command last when encountered somewhere along the way to be able to do
+        // `help <commands>` or `cmd help sub` without creating a bunch of leafs in the parse tree for it
+        if let Some((i, _)) = args.iter().enumerate().find(|(_, arg)| *arg == "help") {
+            args.remove(i);
+            args.push("--help".into())
         }
+
+        args.reverse();
 
         Self { after_double_dash: false, rargs: args }
     }
