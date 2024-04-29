@@ -91,20 +91,16 @@ impl RepeatedPos {
     }
 }
 impl RepeatedPos {
-    const HELP_: &'static str = "\
-RepeatedPos
+    const HELP_: &'static str = "Usage: RepeatedPos <a> [b] [c] [rest]... [-h]
+Arguments:
+  <a>                  
+  [b]                  
+  [c]                  
+  [rest]...            
 
-ARGS:
-    <a>
+Options:
+  -h, --help           Prints help
 
-    [b]
-
-    [c]
-
-    <rest>...
-
-OPTIONS:
-    -h, --help
-      Prints help information.
-";
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
 }

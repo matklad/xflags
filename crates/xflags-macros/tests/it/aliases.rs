@@ -60,18 +60,23 @@ impl AliasCmd {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
-                    (0 | 1 | 2, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
+                    (0, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
+                    (1, "--help" | "-h") => return Err(p_.help(Self::HELP_SUB__)),
                     (1, "--count" | "-c") => {
                         sub__count.push(p_.next_value_from_str::<usize>(&flag_)?)
                     }
+                    (2, "--help" | "-h") => return Err(p_.help(Self::HELP_THIS__)),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "sub" | "s") => state_ = 1,
                     (0, "this" | "one" | "has" | "a" | "lot" | "of" | "aliases") => state_ = 2,
+                    (0, "help") => return Err(p_.help(Self::HELP_)),
                     (0, _) => {
                         return Err(p_.unexpected_arg(arg_));
                     }
+                    (1, "help") => return Err(p_.help(Self::HELP_SUB__)),
+                    (2, "help") => return Err(p_.help(Self::HELP_THIS__)),
                     _ => return Err(p_.unexpected_arg(arg_)),
                 },
             }
@@ -86,24 +91,27 @@ impl AliasCmd {
     }
 }
 impl AliasCmd {
-    const HELP_: &'static str = "\
-alias-cmd
-  commands with different aliases
+    const HELP_SUB__: &'static str = "Usage: sub [-c <count>]
 
-OPTIONS:
-    -h, --help
-      Prints help information.
+And even an aliased subcommand!
 
-SUBCOMMANDS:
+Options:
+  -c, --count <count>  Little sanity check to see if this still works as intended
 
-alias-cmd sub | s
-  And even an aliased subcommand!
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_THIS__: &'static str = "Usage: this
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_: &'static str = "Usage: alias-cmd [-h] <COMMAND>
 
-  OPTIONS:
-    -c, --count <count>
-      Little sanity check to see if this still works as intended
+commands with different aliases
 
+Options:
+  -h, --help           Prints help
 
-alias-cmd this | one | has | a | lot | of | aliases
-";
+Commands:
+  sub                  And even an aliased subcommand!
+  this                 
+  help                 Print this message or the help of the given subcommand(s)";
 }

@@ -47,7 +47,7 @@ fn add_help(cmd: &mut ast::Cmd) {
         arity: ast::Arity::Optional,
         name: "help".to_string(),
         short: Some("h".to_string()),
-        doc: Some("Prints help information.".to_string()),
+        doc: Some("Prints help".to_string()),
         val: None,
     };
     cmd.flags.push(help);
@@ -141,7 +141,7 @@ fn cmd_impl(p: &mut Parser, anon: bool) -> Result<ast::Cmd> {
 
     let mut unique_identifiers = std::collections::HashSet::new();
 
-    for ident in res.subcommands.iter().map(|cmd| cmd.all_identifiers()).flatten() {
+    for ident in res.subcommands.iter().flat_map(|cmd| cmd.all_identifiers()) {
         if !unique_identifiers.insert(ident) {
             bail!("`{}` is defined multiple times", ident)
         }
@@ -324,7 +324,8 @@ impl Parser {
     }
     fn at_keyword(&mut self, kw: &str) -> bool {
         match self.ts.last() {
-            Some(TokenTree::Ident(ident)) => &ident.to_string() == kw,
+            #[allow(clippy::cmp_owned)]
+            Some(TokenTree::Ident(ident)) => ident.to_string() == kw,
             _ => false,
         }
     }

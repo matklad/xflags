@@ -21,7 +21,15 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(mut args: Vec<OsString>) -> Self {
+        // parse `help` command last when encountered somewhere along the way to be able to do
+        // `help <commands>` or `cmd help sub` without creating a bunch of leafs in the parse tree for it
+        if let Some((i, _)) = args.iter().enumerate().find(|(_, arg)| *arg == "help") {
+            args.remove(i);
+            args.push("--help".into())
+        }
+
         args.reverse();
+
         Self { after_double_dash: false, rargs: args }
     }
 
@@ -79,23 +87,28 @@ impl Parser {
         T::Err: fmt::Display,
     {
         match value.into_string() {
-            Ok(str) => str.parse::<T>().map_err(|err| format_err!("can't parse `{flag}`, {err}")),
+            Ok(str) => str.parse::<T>().map_err(|err| format_err!("Can't parse `{flag}`, {err}")),
             Err(it) => {
-                bail!("can't parse `{flag}`, invalid utf8: {it:?}")
+                bail!("Can't parse `{flag}`, invalid utf8: {it:?}")
             }
         }
     }
 
     pub fn unexpected_flag(&self, flag: &str) -> Error {
-        format_err!("unexpected flag: `{flag}`")
+        format_err!("Unknown flag: `{flag}`. Use `help` for more information")
     }
 
     pub fn unexpected_arg(&self, arg: OsString) -> Error {
-        format_err!("unexpected argument: {arg:?}")
+        // `to_string_lossy()` seems appropriate here but OsString's debug implementation actually
+        // escapes codes that are not valid utf-8, rather than replace them with `FFFD`
+        let dbg = format!("{arg:?}");
+        let arg = dbg.trim_matches('"');
+
+        format_err!("Unknown command: `{arg}`. Use `help` for more information")
     }
 
     pub fn subcommand_required(&self) -> Error {
-        format_err!("subcommand is required")
+        format_err!("A subcommand is required. Use `help` for more information")
     }
 
     pub fn help(&self, help: &'static str) -> Error {
@@ -104,15 +117,17 @@ impl Parser {
 
     pub fn optional<T>(&self, flag: &str, mut vals: Vec<T>) -> Result<Option<T>> {
         if vals.len() > 1 {
-            bail!("flag specified more than once: `{flag}`")
+            bail!("Flag specified more than once: `{flag}`")
         }
         Ok(vals.pop())
     }
 
     pub fn required<T>(&self, flag: &str, mut vals: Vec<T>) -> Result<T> {
         if vals.len() > 1 {
-            bail!("flag specified more than once: `{flag}`")
+            bail!("Flag specified more than once: `{flag}`")
         }
-        vals.pop().ok_or_else(|| format_err!("flag is required: `{flag}`"))
+        vals.pop().ok_or_else(|| {
+            format_err!("Flag is required: `{flag}`. Use `help` for more information")
+        })
     }
 }

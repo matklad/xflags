@@ -84,28 +84,36 @@ impl RustAnalyzer {
         while let Some(arg_) = p_.pop_flag() {
             match arg_ {
                 Ok(flag_) => match (state_, flag_.as_str()) {
+                    (0, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
                     (0 | 1 | 2 | 3 | 4, "--verbose" | "-v") => verbose.push(()),
-                    (0 | 1 | 2 | 3 | 4, "--help" | "-h") => return Err(p_.help(Self::HELP_)),
+                    (1, "--help" | "-h") => return Err(p_.help(Self::HELP_SERVER__)),
                     (1 | 2 | 3, "--dir") => server__dir.push(p_.next_value(&flag_)?.into()),
                     (1, _) => {
                         p_.push_back(Ok(flag_));
                         state_ = 2;
                     }
+                    (2, "--help" | "-h") => return Err(p_.help(Self::HELP_SERVER__LAUNCH__)),
                     (2, "--log") => server__launch__log.push(()),
+                    (3, "--help" | "-h") => return Err(p_.help(Self::HELP_SERVER__WATCH__)),
+                    (4, "--help" | "-h") => return Err(p_.help(Self::HELP_ANALYSIS_STATS__)),
                     (4, "--parallel") => analysis_stats__parallel.push(()),
                     _ => return Err(p_.unexpected_flag(&flag_)),
                 },
                 Err(arg_) => match (state_, arg_.to_str().unwrap_or("")) {
                     (0, "server") => state_ = 1,
                     (0, "analysis-stats") => state_ = 4,
+                    (0, "help") => return Err(p_.help(Self::HELP_)),
                     (0, _) => {
                         return Err(p_.unexpected_arg(arg_));
                     }
                     (1, "watch") => state_ = 3,
+                    (1, "help") => return Err(p_.help(Self::HELP_SERVER__)),
                     (1, _) => {
                         p_.push_back(Err(arg_));
                         state_ = 2;
                     }
+                    (2, "help") => return Err(p_.help(Self::HELP_SERVER__LAUNCH__)),
+                    (3, "help") => return Err(p_.help(Self::HELP_SERVER__WATCH__)),
                     (4, _) => {
                         if let (done_ @ false, buf_) = &mut analysis_stats__path {
                             buf_.push(arg_.into());
@@ -142,34 +150,40 @@ impl RustAnalyzer {
     }
 }
 impl RustAnalyzer {
-    const HELP_: &'static str = "\
-rust-analyzer
+    const HELP_SERVER__LAUNCH__: &'static str = "Usage: launch [--log]
+Options:
+  --log                
 
-OPTIONS:
-    -v, --verbose
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_SERVER__WATCH__: &'static str = "Usage: watch
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_SERVER__: &'static str = "Usage: server [--dir <path>] [--log] <COMMAND>
+Options:
+  --dir <path>         
+  --log                
 
-    -h, --help
-      Prints help information.
+Commands:
+  launch               
+  watch                
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_ANALYSIS_STATS__: &'static str = "Usage: analysis-stats <path> [--parallel]
+Arguments:
+  <path>               
 
-SUBCOMMANDS:
+Options:
+  --parallel           
 
-rust-analyzer server
+Commands:
+  help                 Print this message or the help of the given subcommand(s)";
+    const HELP_: &'static str = "Usage: rust-analyzer [-v]... [-h] <COMMAND>
+Options:
+  -v, --verbose        
+  -h, --help           Prints help
 
-  OPTIONS:
-    --dir <path>
-
-    --log
-
-
-rust-analyzer server watch
-
-
-rust-analyzer analysis-stats
-
-  ARGS:
-    <path>
-
-  OPTIONS:
-    --parallel
-";
+Commands:
+  server               
+  analysis-stats       
+  help                 Print this message or the help of the given subcommand(s)";
 }

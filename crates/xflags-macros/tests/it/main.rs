@@ -77,31 +77,43 @@ fn smoke() {
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 92 --werbose",
-        expect![[r#"unexpected flag: `--werbose`"#]],
+        expect!["Unknown flag: `--werbose`. Use `help` for more information"],
     );
-    check(smoke::RustAnalyzer::from_vec, "", expect!["flag is required: `--number`"]);
-    check(smoke::RustAnalyzer::from_vec, ".", expect![[r#"flag is required: `--number`"#]]);
+    check(
+        smoke::RustAnalyzer::from_vec,
+        "",
+        expect!["Flag is required: `--number`. Use `help` for more information"],
+    );
+    check(
+        smoke::RustAnalyzer::from_vec,
+        ".",
+        expect!["Flag is required: `--number`. Use `help` for more information"],
+    );
     check(smoke::RustAnalyzer::from_vec, "-n", expect![[r#"expected a value for `-n`"#]]);
-    check(smoke::RustAnalyzer::from_vec, "-n 92", expect!["flag is required: `workspace`"]);
+    check(
+        smoke::RustAnalyzer::from_vec,
+        "-n 92",
+        expect!["Flag is required: `workspace`. Use `help` for more information"],
+    );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n lol",
-        expect![[r#"can't parse `-n`, invalid digit found in string"#]],
+        expect!["Can't parse `-n`, invalid digit found in string"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 -n 2 .",
-        expect![[r#"flag specified more than once: `--number`"#]],
+        expect!["Flag specified more than once: `--number`"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 . 92 lol",
-        expect![[r#"unexpected argument: "lol""#]],
+        expect!["Unknown command: `lol`. Use `help` for more information"],
     );
     check(
         smoke::RustAnalyzer::from_vec,
         "-n 1 . --emoji --emoji",
-        expect![[r#"flag specified more than once: `--emoji`"#]],
+        expect!["Flag specified more than once: `--emoji`"],
     );
 }
 
@@ -207,7 +219,11 @@ fn subcommands() {
         "#]],
     );
 
-    check(subcommands::RustAnalyzer::from_vec, "", expect![[r#"subcommand is required"#]]);
+    check(
+        subcommands::RustAnalyzer::from_vec,
+        "",
+        expect!["A subcommand is required. Use `help` for more information"],
+    );
 }
 
 #[test]
@@ -234,12 +250,12 @@ fn subcommand_flag_inheritance() {
     check(
         subcommands::RustAnalyzer::from_vec,
         "analysis-stats --verbose --dir .",
-        expect!["unexpected flag: `--dir`"],
+        expect!["Unknown flag: `--dir`. Use `help` for more information"],
     );
     check(
         subcommands::RustAnalyzer::from_vec,
         "--dir . server",
-        expect!["unexpected flag: `--dir`"],
+        expect!["Unknown flag: `--dir`. Use `help` for more information"],
     );
 }
 
@@ -290,9 +306,13 @@ fn edge_cases() {
     check(
         subcommands::RustAnalyzer::from_vec,
         "-- -v server",
-        expect![[r#"unexpected argument: "-v""#]],
+        expect!["Unknown command: `-v`. Use `help` for more information"],
     );
-    check(repeated_pos::RepeatedPos::from_vec, "pos 1 prog -j", expect!["unexpected flag: `-j`"]);
+    check(
+        repeated_pos::RepeatedPos::from_vec,
+        "pos 1 prog -j",
+        expect!["Unknown flag: `-j`. Use `help` for more information"],
+    );
     check(
         repeated_pos::RepeatedPos::from_vec,
         "pos 1 -- prog -j",
