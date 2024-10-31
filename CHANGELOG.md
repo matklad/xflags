@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.0-pre.2
 
--
+- Generate `--help` messages.
 
 ## 0.3.2
 
