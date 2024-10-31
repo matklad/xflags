@@ -166,7 +166,6 @@ Options:
   --log                
 
 Commands:
-  launch               
   watch                
   help                 Print this message or the help of the given subcommand(s)";
     const HELP_ANALYSIS_STATS__: &'static str = "Usage: analysis-stats <path> [--parallel]

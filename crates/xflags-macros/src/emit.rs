@@ -431,17 +431,19 @@ fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
     if let Some(doc) = &cmd.doc {
         w!(help_buf, "\n\n{}\n", doc);
     }
-    if !cmd.args_with_default().is_empty() {
+    let args_with_default = cmd.args_with_default();
+    if !args_with_default.is_empty() {
         w!(help_buf, "\nArguments:\n");
-        for arg in cmd.args_with_default() {
+        for arg in args_with_default {
             let (l, r) = arg.arity.brackets();
             let pre_doc = format!("{l}{}{r}", arg.val.name);
             w!(help_buf, "  {:<20} {}\n", pre_doc, arg.doc.as_deref().unwrap_or(""));
         }
     }
-    if !cmd.flags_with_default().is_empty() {
+    let flags_with_default = cmd.flags_with_default();
+    if !flags_with_default.is_empty() {
         w!(help_buf, "\nOptions:\n");
-        for flag in cmd.flags_with_default() {
+        for flag in flags_with_default {
             let short = flag.short.as_ref().map(|it| format!("-{it}, ")).unwrap_or_default();
             let value = flag.val.as_ref().map(|it| format!(" <{}>", it.name)).unwrap_or_default();
             let pre_doc = format!("{short}--{}{value}", flag.name);
@@ -449,8 +451,10 @@ fn cmd_help_rec(buf: &mut String, cmd: &ast::Cmd, prefix: &str) {
         }
     }
     w!(help_buf, "\nCommands:");
-    for subcommand in &cmd.subcommands {
+    for subcommand in cmd.named_subcommands() {
         w!(help_buf, "\n  {:<20} {}", subcommand.name, subcommand.doc.as_deref().unwrap_or(""));
+    }
+    for subcommand in &cmd.subcommands {
         let prefix = format!("{}{}__", prefix, subcommand.name);
         cmd_help_rec(buf, subcommand, &prefix);
     }
