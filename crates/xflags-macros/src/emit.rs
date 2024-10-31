@@ -602,7 +602,11 @@ mod tests {
             let fmt = reformat(res.clone());
 
             let code = format!(
-                "#[allow(unused)]\nuse std::{{ffi::OsString, path::PathBuf}};\n\n{}",
+                "#![allow(dead_code)] // unused fields
+#[allow(unused)]
+use std::{{ffi::OsString, path::PathBuf}};
+
+{}",
                 fmt.as_deref().unwrap_or(&res)
             );
 

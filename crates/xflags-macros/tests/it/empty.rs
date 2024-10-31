@@ -1,3 +1,4 @@
+#![allow(dead_code)] // unused fields
 #[allow(unused)]
 use std::{ffi::OsString, path::PathBuf};
 
